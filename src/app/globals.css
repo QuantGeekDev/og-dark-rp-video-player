@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  background: #000;
+  color: #f5f7fb;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+button {
+  font: inherit;
+}
+
+.kiosk {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+}
+
+.player {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  transform: scale(1.18);
+  transform-origin: center;
+}
+
+.player iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.interaction-shield {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+
+.status {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  gap: 0.45rem;
+  max-width: min(78vw, 44rem);
+  padding: 1.25rem 1.5rem;
+  text-align: center;
+  color: #eef2ff;
+  background: rgb(0 0 0 / 78%);
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 0.4rem;
+}
+
+.status-title {
+  font-size: clamp(1.25rem, 3vw, 3rem);
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.status-detail {
+  overflow: hidden;
+  font-size: clamp(0.78rem, 1.3vw, 1.25rem);
+  line-height: 1.35;
+  color: #b8c0d4;
+  text-overflow: ellipsis;
+}
+
+.status-error {
+  border-color: rgb(255 102 102 / 35%);
+}
+
+.status-ended {
+  border-color: rgb(255 255 255 / 18%);
+}
