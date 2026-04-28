@@ -3,9 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { KioskPlaybackRequest } from "@/lib/kiosk-query";
 import {
+  buildKioskStatusTitle,
   buildYouTubePlayerVars,
+  computeSynchronizedPlaybackTime,
   isUnexpectedVideo,
   mapYouTubeError,
+  shouldCorrectPlaybackDrift,
   type KioskPlayerState,
 } from "@/lib/youtube";
 
@@ -15,11 +18,12 @@ type YoutubeKioskPlayerProps = {
 
 let apiPromise: Promise<void> | undefined;
 const YouTubeApiTimeoutMs = 12_000;
+const SyncIntervalMs = 1_000;
 
 export default function YoutubeKioskPlayer({
   request,
 }: YoutubeKioskPlayerProps) {
-  const requestKey = `${request.videoId}:${request.start}:${request.volume}:${request.revision}`;
+  const requestKey = `${request.videoId}:${request.start}:${request.startedAt}:${request.volume}:${request.revision}`;
 
   return <YoutubeKioskPlayerSession key={requestKey} request={request} />;
 }
@@ -30,13 +34,71 @@ function YoutubeKioskPlayerSession({ request }: YoutubeKioskPlayerProps) {
   const [activated, setActivated] = useState(false);
   const playerRef = useRef<YouTubePlayer | null>(null);
   const activatedRef = useRef(false);
+  const playbackFinishedRef = useRef(false);
+  const stateRef = useRef<KioskPlayerState>("loading");
+  const detailRef = useRef("Loading YouTube");
+  const latestPlaybackTimeRef = useRef(Number.NaN);
+  const latestDriftRef = useRef(Number.NaN);
   const allowedVideoId = request.videoId;
 
-  const stopWithError = useCallback((message: string) => {
-    playerRef.current?.stopVideo();
-    setState("error");
-    setDetail(message);
-  }, []);
+  const publishStatus = useCallback(
+    (
+      nextState: KioskPlayerState,
+      nextDetail: string,
+      player = playerRef.current,
+    ) => {
+      if (typeof document === "undefined") {
+        return;
+      }
+
+      const targetTime = computeSynchronizedPlaybackTime(request);
+      let playbackTime = latestPlaybackTimeRef.current;
+      let drift = latestDriftRef.current;
+      const currentTime = player?.getCurrentTime();
+
+      if (typeof currentTime === "number" && Number.isFinite(currentTime)) {
+        playbackTime = currentTime;
+        drift = currentTime - targetTime;
+        latestPlaybackTimeRef.current = playbackTime;
+        latestDriftRef.current = drift;
+      } else if (!Number.isFinite(playbackTime)) {
+        playbackTime = targetTime;
+        drift = 0;
+      }
+
+      document.title = buildKioskStatusTitle(
+        nextState,
+        playbackTime,
+        drift,
+        nextDetail,
+      );
+    },
+    [request],
+  );
+
+  const setStatus = useCallback(
+    (
+      nextState: KioskPlayerState,
+      nextDetail: string,
+      player = playerRef.current,
+    ) => {
+      stateRef.current = nextState;
+      detailRef.current = nextDetail;
+      setState(nextState);
+      setDetail(nextDetail);
+      publishStatus(nextState, nextDetail, player);
+    },
+    [publishStatus],
+  );
+
+  const stopWithError = useCallback(
+    (message: string) => {
+      playbackFinishedRef.current = true;
+      playerRef.current?.stopVideo();
+      setStatus("error", message);
+    },
+    [setStatus],
+  );
 
   const assertQueuedVideo = useCallback(() => {
     const currentVideoId = playerRef.current?.getVideoData()?.video_id;
@@ -47,6 +109,37 @@ function YoutubeKioskPlayerSession({ request }: YoutubeKioskPlayerProps) {
 
     return true;
   }, [allowedVideoId, stopWithError]);
+
+  const syncPlayerToClock = useCallback(
+    (force = false, player = playerRef.current) => {
+      if (!player || !assertQueuedVideo()) {
+        return false;
+      }
+
+      const targetTime = computeSynchronizedPlaybackTime(request);
+      const currentTime = player.getCurrentTime();
+      if (!Number.isFinite(currentTime)) {
+        publishStatus(stateRef.current, detailRef.current, player);
+        return false;
+      }
+
+      const drift = currentTime - targetTime;
+      latestPlaybackTimeRef.current = currentTime;
+      latestDriftRef.current = drift;
+
+      if (force || shouldCorrectPlaybackDrift(currentTime, targetTime)) {
+        player.seekTo(targetTime, true);
+        latestPlaybackTimeRef.current = targetTime;
+        latestDriftRef.current = 0;
+        publishStatus(stateRef.current, detailRef.current, player);
+        return true;
+      }
+
+      publishStatus(stateRef.current, detailRef.current, player);
+      return false;
+    },
+    [assertQueuedVideo, publishStatus, request],
+  );
 
   const markActivated = useCallback(() => {
     activatedRef.current = true;
@@ -59,16 +152,26 @@ function YoutubeKioskPlayerSession({ request }: YoutubeKioskPlayerProps) {
       return;
     }
 
+    syncPlayerToClock(true, player);
     player.setVolume(request.volume);
     player.unMute();
     markActivated();
     player.playVideo();
-    setState("playing");
-    setDetail("Playing queued video");
-  }, [assertQueuedVideo, markActivated, request.volume]);
+    setStatus("playing", "Playing queued video", player);
+  }, [
+    assertQueuedVideo,
+    markActivated,
+    request.volume,
+    setStatus,
+    syncPlayerToClock,
+  ]);
 
   useEffect(() => {
     let disposed = false;
+    playbackFinishedRef.current = false;
+    stateRef.current = "loading";
+    detailRef.current = "Loading YouTube";
+    publishStatus("loading", "Loading YouTube");
 
     loadYouTubeApi()
       .then(() => {
@@ -94,39 +197,52 @@ function YoutubeKioskPlayerSession({ request }: YoutubeKioskPlayerProps) {
 
               event.target.setVolume(request.volume);
               event.target.mute();
+              syncPlayerToClock(true, event.target);
               event.target.playVideo();
-              setState("blocked");
-              setDetail("Buffering muted video");
+              setStatus("blocked", "Buffering muted video", event.target);
             },
             onStateChange: (event) => {
               if (disposed || !assertQueuedVideo()) {
                 return;
               }
 
+              if (event.data === window.YT?.PlayerState.ENDED) {
+                playbackFinishedRef.current = true;
+                event.target.stopVideo();
+                setStatus("ended", "Playback ended", event.target);
+                return;
+              }
+
+              syncPlayerToClock(false, event.target);
+
               if (event.data === window.YT?.PlayerState.PLAYING) {
                 if (activatedRef.current) {
-                  setState("playing");
-                  setDetail("Playing queued video");
+                  setStatus("playing", "Playing queued video", event.target);
                 } else {
-                  setState("blocked");
-                  setDetail("Ready to unmute");
+                  setStatus("blocked", "Ready to unmute", event.target);
                 }
               }
 
               if (event.data === window.YT?.PlayerState.BUFFERING) {
-                setState(activatedRef.current ? "loading" : "blocked");
-                setDetail(
+                setStatus(
+                  activatedRef.current ? "loading" : "blocked",
                   activatedRef.current
                     ? "Buffering queued video"
                     : "Buffering muted video",
+                  event.target,
                 );
               }
-
-              if (event.data === window.YT?.PlayerState.ENDED) {
-                event.target.stopVideo();
-                setState("ended");
-                setDetail("Playback ended");
+            },
+            onAutoplayBlocked: (event) => {
+              if (disposed) {
+                return;
               }
+
+              setStatus(
+                "autoplay-blocked",
+                "Autoplay blocked; waiting for interaction",
+                event.target,
+              );
             },
             onError: (event) => {
               if (disposed) {
@@ -143,10 +259,17 @@ function YoutubeKioskPlayerSession({ request }: YoutubeKioskPlayerProps) {
         stopWithError(message);
       });
 
-    const guardInterval = window.setInterval(assertQueuedVideo, 1000);
+    const guardInterval = window.setInterval(() => {
+      if (playbackFinishedRef.current || !assertQueuedVideo()) {
+        return;
+      }
+
+      syncPlayerToClock(false);
+    }, SyncIntervalMs);
 
     return () => {
       disposed = true;
+      playbackFinishedRef.current = true;
       window.clearInterval(guardInterval);
       playerRef.current?.stopVideo();
       playerRef.current?.destroy();
@@ -156,13 +279,16 @@ function YoutubeKioskPlayerSession({ request }: YoutubeKioskPlayerProps) {
   }, [
     allowedVideoId,
     assertQueuedVideo,
-    markActivated,
     request,
     request.volume,
+    publishStatus,
+    setStatus,
     stopWithError,
+    syncPlayerToClock,
   ]);
 
-  const showInteractionShield = !activated && state !== "ended" && state !== "error";
+  const showInteractionShield =
+    !activated && state !== "ended" && state !== "error";
   const showOverlay = state !== "playing" || !activated;
 
   return (
@@ -265,6 +391,7 @@ function loadYouTubeApi(): Promise<void> {
 
 function statusTitle(state: KioskPlayerState): string {
   switch (state) {
+    case "autoplay-blocked":
     case "blocked":
       return "Ready";
     case "ended":

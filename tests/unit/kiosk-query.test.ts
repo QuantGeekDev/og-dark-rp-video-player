@@ -15,6 +15,7 @@ describe("parseKioskQuery", () => {
       ok: true,
       videoId: "dQw4w9WgXcQ",
       start: 42,
+      startedAt: 0,
       volume: 77,
       revision: 9,
     });
@@ -32,6 +33,19 @@ describe("parseKioskQuery", () => {
     }
   });
 
+  it("accepts a shared server playback clock", () => {
+    const result = parseKioskQuery(
+      new URLSearchParams(
+        "videoId=dQw4w9WgXcQ&start=42&startedAt=1777392000000",
+      ),
+    );
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.startedAt).toBe(1777392000000);
+    }
+  });
+
   it("uses defaults for malformed numeric fields", () => {
     const result = parseKioskQuery(
       new URLSearchParams("videoId=dQw4w9WgXcQ&start=nope&volume=loud"),
@@ -40,6 +54,7 @@ describe("parseKioskQuery", () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.start).toBe(0);
+      expect(result.startedAt).toBe(0);
       expect(result.volume).toBe(DEFAULT_VOLUME);
     }
   });

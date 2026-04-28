@@ -14,9 +14,11 @@ declare global {
   type YouTubePlayer = {
     destroy: () => void;
     getVideoData: () => { video_id?: string };
+    getCurrentTime: () => number;
     mute: () => void;
     unMute: () => void;
     playVideo: () => void;
+    seekTo: (seconds: number, allowSeekAhead: boolean) => void;
     stopVideo: () => void;
     setVolume: (volume: number) => void;
   };
@@ -33,6 +35,7 @@ declare global {
           onReady: (event: YouTubePlayerEvent) => void;
           onStateChange: (event: YouTubePlayerEvent) => void;
           onError: (event: YouTubePlayerEvent) => void;
+          onAutoplayBlocked?: (event: YouTubePlayerEvent) => void;
         };
       },
     ) => YouTubePlayer;

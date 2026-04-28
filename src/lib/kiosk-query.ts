@@ -18,6 +18,7 @@ export type KioskPlaybackRequest = {
   ok: true;
   videoId: string;
   start: number;
+  startedAt: number;
   volume: number;
   revision: number;
 };
@@ -57,6 +58,12 @@ export function parseKioskQuery(input: QueryInput): KioskPlaybackParseResult {
     ok: true,
     videoId,
     start: clampInteger(params.get("start"), 0, MAX_START_SECONDS, 0),
+    startedAt: clampInteger(
+      params.get("startedAt"),
+      0,
+      Number.MAX_SAFE_INTEGER,
+      0,
+    ),
     volume: clampInteger(params.get("volume"), 0, 100, DEFAULT_VOLUME),
     revision: clampInteger(params.get("revision"), 0, Number.MAX_SAFE_INTEGER, 0),
   };

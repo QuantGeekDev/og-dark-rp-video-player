@@ -43,17 +43,24 @@ button {
 
 .player {
   position: absolute;
-  inset: -9%;
-  width: auto;
-  height: auto;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   contain: strict;
+  overflow: hidden;
   background: #000;
 }
 
+#youtube-player,
+#youtube-player iframe,
+iframe#youtube-player,
 .player iframe {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
+  background: #000;
   border: 0;
 }
 
@@ -102,8 +109,37 @@ button {
   border-color: rgb(255 102 102 / 35%);
 }
 
+.status-autoplay-blocked,
+.status-blocked {
+  border-color: rgb(255 209 102 / 32%);
+}
+
 .status-ended {
   border-color: rgb(255 255 255 / 18%);
+}
+
+.diagnostic-bars {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      90deg,
+      #f7f7f7 0 14.285%,
+      #f1d54b 14.285% 28.57%,
+      #43d3c9 28.57% 42.855%,
+      #42d95f 42.855% 57.14%,
+      #cc47d9 57.14% 71.425%,
+      #d83f3f 71.425% 85.71%,
+      #3847df 85.71% 100%
+    );
+}
+
+.diagnostic-bars::after {
+  position: absolute;
+  inset: 62% 0 0;
+  content: "";
+  background:
+    linear-gradient(90deg, #101010 0 20%, #fff 20% 40%, #111 40% 60%, #777 60% 80%, #050505 80% 100%);
 }
 
 .site-noise {

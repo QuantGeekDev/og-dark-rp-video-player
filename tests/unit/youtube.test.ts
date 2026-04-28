@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildKioskStatusTitle,
   buildYouTubePlayerVars,
+  computeSynchronizedPlaybackTime,
   isUnexpectedVideo,
   mapYouTubeError,
+  shouldCorrectPlaybackDrift,
 } from "@/lib/youtube";
 
 describe("youtube helpers", () => {
@@ -12,6 +15,7 @@ describe("youtube helpers", () => {
         ok: true,
         videoId: "dQw4w9WgXcQ",
         start: 15,
+        startedAt: 0,
         volume: 65,
         revision: 2,
       },
@@ -44,5 +48,31 @@ describe("youtube helpers", () => {
     expect(isUnexpectedVideo("dQw4w9WgXcQ", "dQw4w9WgXcQ")).toBe(false);
     expect(isUnexpectedVideo("dQw4w9WgXcQ", undefined)).toBe(false);
     expect(isUnexpectedVideo("dQw4w9WgXcQ", "M7lc1UVf-VE")).toBe(true);
+  });
+
+  it("computes synchronized playback time from the shared clock", () => {
+    const request = {
+      ok: true as const,
+      videoId: "dQw4w9WgXcQ",
+      start: 10,
+      startedAt: 1_000,
+      volume: 65,
+      revision: 2,
+    };
+
+    expect(computeSynchronizedPlaybackTime(request, 6_500)).toBe(15.5);
+    expect(computeSynchronizedPlaybackTime({ ...request, startedAt: 0 }, 6_500)).toBe(10);
+  });
+
+  it("uses a threshold before correcting playback drift", () => {
+    expect(shouldCorrectPlaybackDrift(13.1, 15)).toBe(false);
+    expect(shouldCorrectPlaybackDrift(12.9, 15)).toBe(true);
+    expect(shouldCorrectPlaybackDrift(Number.NaN, 15)).toBe(false);
+  });
+
+  it("formats status titles for the S&box web surface bridge", () => {
+    expect(buildKioskStatusTitle("playing", 12.2, -0.25, "Playing now")).toBe(
+      "drp-tv:playing:t=12:d=-0.2:m=Playing_now",
+    );
   });
 });
