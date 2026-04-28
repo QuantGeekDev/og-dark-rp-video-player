@@ -1,23 +1,6 @@
-export type MarkdownBlock =
-  | {
-      type: "paragraph";
-      text: string;
-    }
-  | {
-      type: "list";
-      items: string[];
-    }
-  | {
-      type: "heading";
-      depth: 3 | 4;
-      text: string;
-      slug: string;
-    }
-  | {
-      type: "table";
-      headers: string[];
-      rows: string[][];
-    };
+import type { MarkdownBlock } from "@/lib/markdown-types";
+
+export type { MarkdownBlock };
 
 export type RuleEntry = {
   id: string;

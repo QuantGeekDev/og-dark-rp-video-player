@@ -3,8 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { MarkdownBlocks } from "@/components/MarkdownContent";
 import type {
-  MarkdownBlock,
   RuleCategory,
   RuleEntry,
   RulebookData,
@@ -73,6 +73,9 @@ export function RulesExplorer({ rulebook }: { rulebook: RulebookData }) {
           <div className="flex items-center gap-5 text-xs font-bold uppercase tracking-[0.2em] text-white/70">
             <Link className="transition hover:text-white" href="/">
               Home
+            </Link>
+            <Link className="transition hover:text-white" href="/guides">
+              Guides
             </Link>
             <Link className="transition hover:text-white" href="/#join">
               Launch
@@ -438,148 +441,6 @@ function RuleCard({
       </div>
     </article>
   );
-}
-
-function MarkdownBlocks({ blocks }: { blocks: MarkdownBlock[] }) {
-  return (
-    <>
-      {blocks.map((block, index) => {
-        if (block.type === "paragraph") {
-          return (
-            <p key={index} className="text-base font-medium leading-8 text-white/68">
-              <InlineText text={block.text} />
-            </p>
-          );
-        }
-
-        if (block.type === "list") {
-          return (
-            <ul key={index} className="grid gap-2">
-              {block.items.map((item) => (
-                <li key={item} className="flex gap-3 text-base font-medium leading-7 text-white/68">
-                  <span className="mt-2.5 h-2 w-2 shrink-0 bg-[#72f1b8]" />
-                  <span>
-                    <InlineText text={item} />
-                  </span>
-                </li>
-              ))}
-            </ul>
-          );
-        }
-
-        if (block.type === "heading") {
-          return (
-            <h4
-              key={index}
-              className="pt-2 text-lg font-black uppercase tracking-[0.04em] text-[#ffd166]"
-            >
-              {block.text}
-            </h4>
-          );
-        }
-
-        return (
-          <div key={index} className="overflow-x-auto border border-white/10">
-            <table className="w-full min-w-[44rem] border-collapse text-left">
-              <thead className="bg-white/[0.06] text-xs font-black uppercase tracking-[0.14em] text-white/58">
-                <tr>
-                  {block.headers.map((header) => (
-                    <th key={header} className="border-b border-white/10 px-3 py-3">
-                      <InlineText text={header} />
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {block.rows.map((row, rowIndex) => (
-                  <tr key={rowIndex} className="border-b border-white/8 last:border-0">
-                    {row.map((cell, cellIndex) => (
-                      <td
-                        key={`${rowIndex}-${cellIndex}`}
-                        className="px-3 py-3 text-sm font-medium leading-6 text-white/68"
-                      >
-                        <InlineText text={cell} />
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        );
-      })}
-    </>
-  );
-}
-
-function InlineText({ text }: { text: string }) {
-  const parts = parseInline(text);
-
-  return (
-    <>
-      {parts.map((part, index) => {
-        if (part.type === "code") {
-          return (
-            <code
-              key={index}
-              className="border border-white/10 bg-black/35 px-1.5 py-0.5 text-[0.92em] font-bold text-[#ffd166]"
-            >
-              {part.text}
-            </code>
-          );
-        }
-
-        if (part.type === "link") {
-          return (
-            <a
-              key={index}
-              href={part.href}
-              target={part.href.startsWith("http") ? "_blank" : undefined}
-              rel={part.href.startsWith("http") ? "noreferrer" : undefined}
-              className="font-bold text-[#9bbcff] underline decoration-[#9bbcff]/35 underline-offset-4 transition hover:text-white"
-            >
-              {part.text}
-            </a>
-          );
-        }
-
-        return <span key={index}>{part.text}</span>;
-      })}
-    </>
-  );
-}
-
-function parseInline(text: string) {
-  const parts: Array<
-    | { type: "text"; text: string }
-    | { type: "code"; text: string }
-    | { type: "link"; text: string; href: string }
-  > = [];
-  const pattern = /(`[^`]+`|\[[^\]]+\]\([^)]+\))/g;
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-
-  while ((match = pattern.exec(text))) {
-    if (match.index > lastIndex) {
-      parts.push({ type: "text", text: text.slice(lastIndex, match.index) });
-    }
-
-    const token = match[0];
-    const link = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
-    if (link) {
-      parts.push({ type: "link", text: link[1], href: link[2] });
-    } else {
-      parts.push({ type: "code", text: token.slice(1, -1) });
-    }
-
-    lastIndex = match.index + token.length;
-  }
-
-  if (lastIndex < text.length) {
-    parts.push({ type: "text", text: text.slice(lastIndex) });
-  }
-
-  return parts;
 }
 
 function groupCategories(categories: RuleCategory[]): CategoryGroup[] {

@@ -1,10 +1,35 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
+
+const siteTitle = "OG Dark RP | DarkRP Reborn in Source 2";
+const siteDescription =
+  "Classic GMod DarkRP reborn in S&box: mayor laws, police raids, criminal crews, player shops, casinos, vehicles, bank robberies, and in-game TVs in a Source 2 city.";
+const previewImage = "/og-dark-rp-splash.png";
 
 export const metadata: Metadata = {
-  title: "OG Dark RP | S&box Roleplay",
-  description:
-    "A cinematic landing page for OG Dark RP, a Source 2 successor to classic GMod DarkRP built in S&box.",
+  metadataBase: new URL("https://og-dark-rp-video-player.vercel.app"),
+  title: siteTitle,
+  description: siteDescription,
+  openGraph: {
+    title: siteTitle,
+    description: siteDescription,
+    type: "website",
+    images: [
+      {
+        url: previewImage,
+        width: 1200,
+        height: 630,
+        alt: "OG Dark RP city roleplay scene",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteTitle,
+    description: siteDescription,
+    images: [previewImage],
+  },
 };
 
 const liveStats = [
@@ -152,9 +177,12 @@ export default function Home() {
             <a className="transition hover:text-white" href="#roles">
               Roles
             </a>
-            <a className="transition hover:text-white" href="/rules">
+            <Link className="transition hover:text-white" href="/rules">
               Rules
-            </a>
+            </Link>
+            <Link className="transition hover:text-white" href="/guides">
+              Guides
+            </Link>
             <a className="transition hover:text-white" href="#join">
               Launch
             </a>

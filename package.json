@@ -7,6 +7,7 @@
     "build": "node ./node_modules/next/dist/bin/next build",
     "start": "node ./node_modules/next/dist/bin/next start",
     "lint": "node ./node_modules/eslint/bin/eslint.js",
+    "sync:guides": "node scripts/sync-guides.mjs --prune",
     "test": "node ./node_modules/vitest/vitest.mjs run",
     "test:watch": "node ./node_modules/vitest/vitest.mjs",
     "typecheck": "node ./node_modules/typescript/bin/tsc --noEmit"
