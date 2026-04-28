@@ -39,6 +39,7 @@ declare global {
     PlayerState: {
       ENDED: number;
       PLAYING: number;
+      BUFFERING: number;
     };
   };
 }

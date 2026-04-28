@@ -19,9 +19,17 @@ const YouTubeApiTimeoutMs = 12_000;
 export default function YoutubeKioskPlayer({
   request,
 }: YoutubeKioskPlayerProps) {
+  const requestKey = `${request.videoId}:${request.start}:${request.volume}:${request.revision}`;
+
+  return <YoutubeKioskPlayerSession key={requestKey} request={request} />;
+}
+
+function YoutubeKioskPlayerSession({ request }: YoutubeKioskPlayerProps) {
   const [state, setState] = useState<KioskPlayerState>("loading");
   const [detail, setDetail] = useState("Loading YouTube");
+  const [activated, setActivated] = useState(false);
   const playerRef = useRef<YouTubePlayer | null>(null);
+  const activatedRef = useRef(false);
   const allowedVideoId = request.videoId;
 
   const stopWithError = useCallback((message: string) => {
@@ -40,6 +48,11 @@ export default function YoutubeKioskPlayer({
     return true;
   }, [allowedVideoId, stopWithError]);
 
+  const markActivated = useCallback(() => {
+    activatedRef.current = true;
+    setActivated(true);
+  }, []);
+
   const activatePlayback = useCallback(() => {
     const player = playerRef.current;
     if (!player || !assertQueuedVideo()) {
@@ -48,10 +61,11 @@ export default function YoutubeKioskPlayer({
 
     player.setVolume(request.volume);
     player.unMute();
+    markActivated();
     player.playVideo();
     setState("playing");
     setDetail("Playing queued video");
-  }, [assertQueuedVideo, request.volume]);
+  }, [assertQueuedVideo, markActivated, request.volume]);
 
   useEffect(() => {
     let disposed = false;
@@ -82,7 +96,7 @@ export default function YoutubeKioskPlayer({
               event.target.mute();
               event.target.playVideo();
               setState("blocked");
-              setDetail("Click to unmute");
+              setDetail("Buffering muted video");
             },
             onStateChange: (event) => {
               if (disposed || !assertQueuedVideo()) {
@@ -90,8 +104,22 @@ export default function YoutubeKioskPlayer({
               }
 
               if (event.data === window.YT?.PlayerState.PLAYING) {
-                setState("playing");
-                setDetail("Playing queued video");
+                if (activatedRef.current) {
+                  setState("playing");
+                  setDetail("Playing queued video");
+                } else {
+                  setState("blocked");
+                  setDetail("Ready to unmute");
+                }
+              }
+
+              if (event.data === window.YT?.PlayerState.BUFFERING) {
+                setState(activatedRef.current ? "loading" : "blocked");
+                setDetail(
+                  activatedRef.current
+                    ? "Buffering queued video"
+                    : "Buffering muted video",
+                );
               }
 
               if (event.data === window.YT?.PlayerState.ENDED) {
@@ -123,26 +151,31 @@ export default function YoutubeKioskPlayer({
       playerRef.current?.stopVideo();
       playerRef.current?.destroy();
       playerRef.current = null;
+      activatedRef.current = false;
     };
   }, [
     allowedVideoId,
     assertQueuedVideo,
+    markActivated,
     request,
     request.volume,
     stopWithError,
   ]);
 
-  const showOverlay = state !== "playing";
+  const showInteractionShield = !activated && state !== "ended" && state !== "error";
+  const showOverlay = state !== "playing" || !activated;
 
   return (
     <main className="kiosk">
       <div id="youtube-player" className="player" />
-      <button
-        aria-label="Activate queued playback"
-        className="interaction-shield"
-        type="button"
-        onClick={activatePlayback}
-      />
+      {showInteractionShield ? (
+        <button
+          aria-label="Activate queued playback"
+          className="interaction-shield"
+          type="button"
+          onClick={activatePlayback}
+        />
+      ) : null}
       {showOverlay ? (
         <section className={`status status-${state}`} aria-live="polite">
           <div className="status-title">{statusTitle(state)}</div>
