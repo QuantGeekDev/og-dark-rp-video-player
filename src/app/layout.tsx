@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "DRP TV Kiosk",
-  description: "YouTube kiosk wrapper for WIP-Dark-RP televisions",
+  description: "YouTube kiosk wrapper for OG Dark RP televisions",
 };
 
 export default function RootLayout({

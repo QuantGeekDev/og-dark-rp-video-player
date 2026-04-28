@@ -3,12 +3,12 @@ id: server-rules
 title: Server Rules
 order: 0
 updated: 2026-04-27
-summary: The player-facing rulebook for WIP-Dark-RP.
+summary: The player-facing rulebook for OG Dark RP.
 ---
 
 # Server Rules
 
-Welcome to WIP-Dark-RP: part crime sim, part city sandbox, part social experiment with too many people holding crowbars. The rules exist to keep scenes playable, not to turn every sidewalk argument into a court transcript.
+Welcome to OG Dark RP: part crime sim, part city sandbox, part social experiment with too many people holding crowbars. The rules exist to keep scenes playable, not to turn every sidewalk argument into a court transcript.
 
 Use this folder as the source of truth for player-facing rules. It is written in markdown now and structured so it can later power MOTD, scoreboard, onboarding, and staff warning links.
 
@@ -89,4 +89,3 @@ Every category file has:
 - `related`
 
 Future UI should show the summary first, then rule sections. Keep rule ids stable so staff warnings and MOTD links can point to them later.
-

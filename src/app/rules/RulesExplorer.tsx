@@ -83,8 +83,8 @@ export function RulesExplorer({ rulebook }: { rulebook: RulebookData }) {
 
       <section className="relative overflow-hidden border-b border-white/10 bg-[#11100f] px-5 py-12 sm:px-8 lg:py-16">
         <div className="site-noise" />
-        <div className="relative mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:items-end">
-          <div>
+        <div className="relative mx-auto max-w-7xl">
+          <div className="max-w-3xl">
             <p className="text-xs font-black uppercase tracking-[0.24em] text-[#ffd166]">
               Player Rulebook
             </p>
@@ -94,13 +94,6 @@ export function RulesExplorer({ rulebook }: { rulebook: RulebookData }) {
             <p className="mt-5 max-w-2xl text-base font-medium leading-8 text-white/68 md:text-lg">
               {rulebook.intro.summary}
             </p>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-4">
-            <Stat label="categories" value={String(rulebook.categories.length)} />
-            <Stat label="rules" value={String(rulebook.totalRules)} />
-            <Stat label="mechanics" value={String(rulebook.mechanics.length)} />
-            <Stat label="updated" value={rulebook.updated} compact />
           </div>
         </div>
       </section>
@@ -149,31 +142,6 @@ export function RulesExplorer({ rulebook }: { rulebook: RulebookData }) {
         </div>
       </section>
     </main>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  compact,
-}: {
-  label: string;
-  value: string;
-  compact?: boolean;
-}) {
-  return (
-    <div className="border border-white/10 bg-black/35 p-4">
-      <div
-        className={`font-black text-[#ff4d4d] ${
-          compact ? "text-xl md:text-2xl" : "text-3xl"
-        }`}
-      >
-        {value}
-      </div>
-      <div className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-white/45">
-        {label}
-      </div>
-    </div>
   );
 }
 

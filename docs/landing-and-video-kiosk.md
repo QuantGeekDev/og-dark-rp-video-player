@@ -8,7 +8,7 @@ This document records the April 2026 shift for `darkrp-tv-kiosk`: the app is no 
 | --- | --- | --- |
 | `/` | Players, server visitors, marketing links | The default OG Dark RP landing page. It introduces the server, jobs, economy loops, law systems, vehicles, organizations, and launch notes. |
 | `/rules` | Players, staff, server visitors | A searchable rules browser generated from the mirrored `content/server-rules` markdown rulebook. |
-| `/embed/youtube` | WIP-Dark-RP `WebPanel` televisions | A fullscreen kiosk route that renders exactly one normalized YouTube queue item from the game. |
+| `/embed/youtube` | OG Dark RP `WebPanel` televisions | A fullscreen kiosk route that renders exactly one normalized YouTube queue item from the game. |
 | `/api/health` | Deployment checks | Small health response for platform and tunnel checks. |
 
 Keep these responsibilities separate. The landing page can be expressive and public. The kiosk route should stay small, predictable, and locked to the media state sent by the game.
@@ -19,12 +19,12 @@ The default home page moved from a placeholder kiosk status screen to a proper O
 
 The TV system still lives at `/embed/youtube`, so existing game code should not point televisions at `/`. The landing page is for humans in a normal browser. The embed route is for in-game screens.
 
-The root page uses project-owned visual assets copied from `WIP-Dark-RP`:
+The root page uses OG Dark RP visual assets:
 
 - `public/og-dark-rp-logo-no-bg.png`
 - `public/og-dark-rp-splash.png`
 
-The rules page uses markdown mirrored from `WIP-Dark-RP/docs/server-rules` into `content/server-rules`. Keep the mirrored files current when the gamemode rulebook changes.
+The rules page uses markdown mirrored into `content/server-rules`. Keep the mirrored files current when the gamemode rulebook changes.
 
 The global stylesheet now supports normal page scrolling while keeping `.kiosk` fixed and fullscreen for television playback.
 
@@ -33,7 +33,7 @@ The global stylesheet now supports normal page scrolling while keeping `.kiosk` 
 The game remains authoritative. The website does not decide what a TV should play.
 
 ```text
-Player enters YouTube URL in WIP-Dark-RP
+Player enters YouTube URL in OG Dark RP
   -> game validates ownership, cooldowns, permissions, range, and media rules
   -> game extracts only the YouTube video ID and start offset
   -> game syncs normalized TV state to clients
@@ -78,7 +78,7 @@ The kiosk must continue to:
 
 The app-level CSP should continue to allow YouTube iframe/script/media needs while keeping the page locked down.
 
-## WIP-Dark-RP Integration
+## OG Dark RP Integration
 
 The active gamemode should configure its TV kiosk base URL to the hosted embed route, not the site root.
 
@@ -108,7 +108,7 @@ The landing page Discord CTA should stay in sync with the permanent invite used 
 https://discord.gg/b2ursP823g
 ```
 
-The source of truth in `WIP-Dark-RP` is `Code/UI/OgPauseMenu.razor`, where `DiscordInviteUrl` feeds the rich pause-menu link.
+The source of truth in the gamemode is `Code/UI/OgPauseMenu.razor`, where `DiscordInviteUrl` feeds the rich pause-menu link.
 
 For the launch CTA, the safe public target is the package page:
 

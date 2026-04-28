@@ -3,7 +3,7 @@ id: glossary-and-key-numbers
 title: Glossary and Key Numbers
 order: 140
 updated: 2026-04-27
-summary: Quick definitions and current values for common DarkRP terms and WIP-Dark-RP mechanics.
+summary: Quick definitions and current values for common DarkRP terms and OG Dark RP mechanics.
 mechanics:
   - glossary
   - key-numbers
@@ -47,7 +47,7 @@ Abusing a job, scene, or mechanic in a way that breaks the server's roleplay str
 
 ### FearRP
 
-A strict "value your life under threat" rule on some servers. WIP-Dark-RP does not use strict global FearRP by default, but reckless life-disregard can still become FailRP in specific scenes.
+A strict "value your life under threat" rule on some servers. OG Dark RP does not use strict global FearRP by default, but reckless life-disregard can still become FailRP in specific scenes.
 
 ### IC
 
@@ -119,4 +119,3 @@ Law command authorization to search or arrest a target. Search and arrest warran
 - Values can change with balancing. When in doubt, trust the current code and in-game UI.
 - Staff should avoid enforcing old values from memory when the code has moved on.
 - If a number here conflicts with a live mechanic, file a docs bug and follow the live mechanic until fixed.
-

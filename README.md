@@ -3,7 +3,7 @@
 This Next.js app now has two public jobs:
 
 - `/` is the default OG Dark RP landing page.
-- `/embed/youtube` is the hosted YouTube kiosk wrapper for WIP-Dark-RP televisions.
+- `/embed/youtube` is the hosted YouTube kiosk wrapper for OG Dark RP televisions.
 
 See [docs/landing-and-video-kiosk.md](docs/landing-and-video-kiosk.md) for the site shift, route contract, and video player architecture.
 
@@ -37,7 +37,7 @@ npm run build
 
 ## Deployment
 
-Deploy this repo to Vercel. The site root is public-facing, and WIP-Dark-RP should keep using the `/embed/youtube` route as the TV kiosk base URL on the production or preview origin.
+Deploy this repo to Vercel. The site root is public-facing, and OG Dark RP should keep using the `/embed/youtube` route as the TV kiosk base URL on the production or preview origin.
 
 Use a referrer policy that preserves the origin for cross-origin requests. YouTube Error 153 means the embed request did not include a referrer or equivalent client identity.
 

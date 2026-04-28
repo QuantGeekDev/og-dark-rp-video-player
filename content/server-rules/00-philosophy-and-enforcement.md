@@ -33,9 +33,7 @@ Examples:
 
 ### PHIL-002 - The game systems are the first referee
 
-When WIP-Dark-RP has a system for something, use it. Contracts use the hitman system. Warrants use the law system. Organization benefits use organization permissions. Pocket storage uses the pocket system.
-
-Side deals can be fun roleplay, but staff will not always enforce them like engine-backed transactions.
+When OG Dark RP has a system for something, use it. Contracts use the hitman system. Warrants use the law system. Organization benefits use organization permissions. Pocket storage uses the pocket system.
 
 ### PHIL-003 - Crime is gameplay, griefing is not
 
@@ -77,4 +75,3 @@ Ask for help when something is abusive, broken, exploitative, or impossible to r
 - Prefer targeted restrictions when one mechanic is being abused.
 - Keep staff action separate from in-character revenge.
 - Use audit logs and server systems before relying only on chat arguments.
-
