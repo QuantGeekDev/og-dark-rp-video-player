@@ -97,6 +97,38 @@ The landing page can use the same production origin:
 https://<site-origin>/
 ```
 
+## Discord And Launch CTAs
+
+The landing page Discord CTA should stay in sync with the permanent invite used by the active gamemode pause menu:
+
+```text
+https://discord.gg/b2ursP823g
+```
+
+The source of truth in `WIP-Dark-RP` is `Code/UI/OgPauseMenu.razor`, where `DiscordInviteUrl` feeds the rich pause-menu link.
+
+For the launch CTA, the safe public target is the package page:
+
+```text
+https://sbox.game/artisan/darkrpog
+```
+
+That page is expected to expose the s&box package UI and play/server-list flow. A more direct website button is technically plausible through Steam's browser protocol because s&box reads Steam URL launch arguments and the menu honors `-rungame`.
+
+Package modal shape:
+
+```text
+steam://run/590830//-rungame%20artisan.darkrpog/
+```
+
+Candidate direct server shape, once a stable production endpoint is known:
+
+```text
+steam://run/590830//+connect%20<server-id-or-ip:port>/
+```
+
+Do not ship the direct connect variant until it has been tested against the live server. The game can connect by lobby Steam ID or IP:port internally, but the public site should not publish a guessed server target. Avoid combining `-rungame` and `+connect` in one public link until command ordering has been verified.
+
 ## Development Checks
 
 Use the standard project checks before deploying changes:

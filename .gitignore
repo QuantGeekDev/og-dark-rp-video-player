@@ -33,6 +33,7 @@ next-dev.log
 next-dev.err.log
 next-dev-*.log
 next-dev-*.err.log
+next-start-*.log
 next-start.log
 next-start.err.log
 ngrok.log

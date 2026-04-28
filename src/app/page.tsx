@@ -11,8 +11,11 @@ const liveStats = [
   { label: "role lanes", value: "28", tone: "text-[#ff4d4d]" },
   { label: "economy loops", value: "16", tone: "text-[#ffd166]" },
   { label: "law systems", value: "9", tone: "text-[#72f1b8]" },
-  { label: "Source 2 build", value: "2026", tone: "text-[#9bbcff]" },
+  { label: "Source 2 roleplay", value: "OG", tone: "text-[#9bbcff]" },
 ];
+
+const discordInviteUrl = "https://discord.gg/b2ursP823g";
+const sboxPackageUrl = "https://sbox.game/artisan/darkrpog";
 
 const featureSignals = [
   "Mayor laws, taxes, treasury and public broadcasts",
@@ -99,6 +102,19 @@ const launchBeats = [
   "TV, shop, job, pocket, door and vehicle systems already connected",
 ];
 
+function DiscordIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="h-5 w-5 shrink-0"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+    >
+      <path d="M20.32 4.37A19.8 19.8 0 0 0 15.37 2.8a13.8 13.8 0 0 0-.63 1.3 18.4 18.4 0 0 0-5.48 0 12.5 12.5 0 0 0-.64-1.3 19.7 19.7 0 0 0-4.95 1.57C.54 9.03-.31 13.58.1 18.07a19.9 19.9 0 0 0 6.08 3.08c.49-.67.93-1.38 1.3-2.13-.71-.27-1.38-.6-2.02-.97l.48-.38a14.2 14.2 0 0 0 12.12 0l.48.38c-.64.38-1.32.7-2.03.97.38.75.82 1.46 1.31 2.13a19.8 19.8 0 0 0 6.08-3.08c.48-5.2-.8-9.7-3.58-13.7ZM8.02 15.31c-1.18 0-2.15-1.09-2.15-2.43 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.1 2.15 2.43 0 1.34-.95 2.43-2.15 2.43Zm7.96 0c-1.18 0-2.15-1.09-2.15-2.43 0-1.34.95-2.43 2.15-2.43 1.2 0 2.17 1.1 2.15 2.43 0 1.34-.95 2.43-2.15 2.43Z" />
+    </svg>
+  );
+}
+
 export default function Home() {
   return (
     <main className="min-h-screen overflow-hidden bg-[#050506] text-[#f6f1e8] selection:bg-[#ff4d4d] selection:text-white">
@@ -148,7 +164,7 @@ export default function Home() {
         >
           <div className="min-w-0 max-w-[calc(100vw-2.5rem)] sm:max-w-4xl">
             <div className="mb-5 inline-flex border border-[#ff4d4d]/40 bg-[#ff4d4d]/10 px-3 py-2 text-xs font-black uppercase tracking-[0.22em] text-[#ffb0a8]">
-              Source 2 social warfare
+              Dark RP in Source 2
             </div>
             <h1 className="max-w-5xl text-6xl font-black uppercase leading-[0.9] text-white sm:text-7xl md:text-8xl lg:text-9xl">
               OG
@@ -159,12 +175,21 @@ export default function Home() {
               raids, fragile economies, player businesses, dirty money and TVs
               glowing in apartments above the street.
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <a
                 href="#join"
                 className="inline-flex h-12 items-center justify-center border border-[#ff4d4d] bg-[#ff4d4d] px-6 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-[#d83232]"
               >
                 Enter Downtown
+              </a>
+              <a
+                href={discordInviteUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-12 items-center justify-center gap-2 border border-[#7a85ff] bg-[#5865f2] px-6 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-[#4752c4]"
+              >
+                <DiscordIcon />
+                Join Our Discord
               </a>
               <a
                 href="#systems"
@@ -364,12 +389,23 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            <a
-              href="#top"
-              className="mt-6 inline-flex h-12 w-full items-center justify-center bg-[#050506] px-6 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-[#2b2421]"
-            >
-              Back To Broadcast
-            </a>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <a
+                href={sboxPackageUrl}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Join server on sbox.game"
+                className="inline-flex h-12 items-center justify-center bg-[#ff4d4d] px-6 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-[#d83232]"
+              >
+                Join Server
+              </a>
+              <a
+                href="#top"
+                className="inline-flex h-12 items-center justify-center bg-[#050506] px-6 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-[#2b2421]"
+              >
+                Back To Broadcast
+              </a>
+            </div>
           </div>
         </div>
       </section>
