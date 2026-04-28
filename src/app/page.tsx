@@ -152,6 +152,9 @@ export default function Home() {
             <a className="transition hover:text-white" href="#roles">
               Roles
             </a>
+            <a className="transition hover:text-white" href="/rules">
+              Rules
+            </a>
             <a className="transition hover:text-white" href="#join">
               Launch
             </a>

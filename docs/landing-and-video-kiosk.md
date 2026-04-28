@@ -7,6 +7,7 @@ This document records the April 2026 shift for `darkrp-tv-kiosk`: the app is no 
 | Route | Audience | Responsibility |
 | --- | --- | --- |
 | `/` | Players, server visitors, marketing links | The default OG Dark RP landing page. It introduces the server, jobs, economy loops, law systems, vehicles, organizations, and launch notes. |
+| `/rules` | Players, staff, server visitors | A searchable rules browser generated from the mirrored `content/server-rules` markdown rulebook. |
 | `/embed/youtube` | WIP-Dark-RP `WebPanel` televisions | A fullscreen kiosk route that renders exactly one normalized YouTube queue item from the game. |
 | `/api/health` | Deployment checks | Small health response for platform and tunnel checks. |
 
@@ -22,6 +23,8 @@ The root page uses project-owned visual assets copied from `WIP-Dark-RP`:
 
 - `public/og-dark-rp-logo-no-bg.png`
 - `public/og-dark-rp-splash.png`
+
+The rules page uses markdown mirrored from `WIP-Dark-RP/docs/server-rules` into `content/server-rules`. Keep the mirrored files current when the gamemode rulebook changes.
 
 The global stylesheet now supports normal page scrolling while keeping `.kiosk` fixed and fullscreen for television playback.
 
