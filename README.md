@@ -44,7 +44,7 @@ Use a referrer policy that preserves the origin for cross-origin requests. YouTu
 
 ## Discord link reward
 
-Backs the gamemode's one-time `+$20,000` reward for joining our Discord. See
+Backs the gamemode's one-time `+$12,000` reward for joining our Discord. See
 [`plans/April 29th - Discord Link Reward Plan.md`](../WIP-Dark-RP/plans/April%2029th%20-%20Discord%20Link%20Reward%20Plan.md)
 in the gamemode repo for the full design.
 

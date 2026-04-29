@@ -21,6 +21,9 @@ interface PageProps {
 }
 
 const DISCORD_INVITE = "https://discord.gg/b2ursP823g";
+// Keep in sync with `drp.discord_link_reward_amount` (default 12000) on the
+// gamemode side. If the in-game reward changes, update this value too.
+const REWARD_DISPLAY = "$12,000";
 
 export default async function LinkDiscordPage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
@@ -205,7 +208,7 @@ function PendingPanel({ view }: { view: PendingView }) {
       </p>
       <p style={{ lineHeight: 1.55, margin: "0 0 24px", color: "#cab" }}>
         After Discord redirects you back here, you can close the tab and switch
-        back to the game. Your <strong>+$20,000</strong> reward will arrive
+        back to the game. Your <strong>+{REWARD_DISPLAY}</strong> reward will arrive
         automatically.
       </p>
       <a
@@ -243,8 +246,8 @@ function VerifiedPanel({ view }: { view: VerifiedView }) {
       </h1>
       <p style={{ lineHeight: 1.55, margin: "0 0 16px" }}>
         {view.rewardEligible
-          ? "Your Discord is now linked to your OG Dark RP character. The $20,000 reward will hit your wallet within a few seconds. Switch back to the game."
-          : "Your Discord is linked, but this Discord account already claimed the +$20,000 reward on a previous Steam account, so no extra cash this time. You can return to the game."}
+          ? `Your Discord is now linked to your OG Dark RP character. The ${REWARD_DISPLAY} reward will hit your wallet within a few seconds. Switch back to the game.`
+          : `Your Discord is linked, but this Discord account already claimed the +${REWARD_DISPLAY} reward on a previous Steam account, so no extra cash this time. You can return to the game.`}
       </p>
       <p style={{ fontSize: 12, color: "#a99" }}>
         You can close this tab.
