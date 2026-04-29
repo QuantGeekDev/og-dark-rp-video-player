@@ -4,8 +4,8 @@ const SHARED_SECRET_HEADER = "x-link-secret";
 
 export function getSharedSecret(): string {
   const value = process.env.LINK_SHARED_SECRET;
-  if (!value || value.length < 16) {
-    throw new Error("LINK_SHARED_SECRET missing or too short (need >=16 chars)");
+  if (!value || value.length < 8) {
+    throw new Error("LINK_SHARED_SECRET missing or too short (need >=8 chars)");
   }
   return value;
 }
