@@ -28,6 +28,11 @@ export type KioskPlayerState =
 
 export const SYNC_DRIFT_THRESHOLD_SECONDS = 2;
 
+export type YouTubeVolumeController = Pick<
+  YouTubePlayer,
+  "mute" | "setVolume" | "unMute"
+>;
+
 export function buildYouTubePlayerVars(
   request: KioskPlaybackRequest,
   origin: string,
@@ -99,6 +104,42 @@ export function shouldCorrectPlaybackDrift(
   }
 
   return Math.abs(currentTime - targetTime) > thresholdSeconds;
+}
+
+export function applyYouTubeVolume(
+  player: YouTubeVolumeController,
+  volume: number,
+  options: { allowUnmute?: boolean } = {},
+): number {
+  const clampedVolume = clampFiniteNumber(Math.round(volume), 0, 100);
+  player.setVolume(clampedVolume);
+
+  if (clampedVolume <= 0 || options.allowUnmute === false) {
+    player.mute();
+  } else {
+    player.unMute();
+  }
+
+  return clampedVolume;
+}
+
+export function resolveLocalKioskVolume(
+  hash: string,
+  fallbackVolume: number,
+): number {
+  const fallback = clampFiniteNumber(Math.round(fallbackVolume), 0, 100);
+  const fragment = hash.trim().replace(/^#/, "");
+  if (!fragment) {
+    return fallback;
+  }
+
+  const params = new URLSearchParams(fragment);
+  const raw = params.get("localVolume");
+  if (raw === null || !/^-?\d+$/.test(raw.trim())) {
+    return fallback;
+  }
+
+  return clampFiniteNumber(Number.parseInt(raw, 10), 0, 100);
 }
 
 export function buildKioskStatusTitle(

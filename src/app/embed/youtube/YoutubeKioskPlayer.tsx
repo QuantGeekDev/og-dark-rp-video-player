@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { KioskPlaybackRequest } from "@/lib/kiosk-query";
 import {
+  applyYouTubeVolume,
   buildKioskStatusTitle,
   buildYouTubePlayerVars,
   computeSynchronizedPlaybackTime,
   isUnexpectedVideo,
   mapYouTubeError,
+  resolveLocalKioskVolume,
   shouldCorrectPlaybackDrift,
   type KioskPlayerState,
 } from "@/lib/youtube";
@@ -32,8 +34,12 @@ function YoutubeKioskPlayerSession({ request }: YoutubeKioskPlayerProps) {
   const [state, setState] = useState<KioskPlayerState>("loading");
   const [detail, setDetail] = useState("Loading YouTube");
   const [activated, setActivated] = useState(false);
+  const [localVolume, setLocalVolume] = useState(() =>
+    getWindowLocalVolume(request.volume),
+  );
   const playerRef = useRef<YouTubePlayer | null>(null);
   const activatedRef = useRef(false);
+  const localVolumeRef = useRef(localVolume);
   const playbackFinishedRef = useRef(false);
   const stateRef = useRef<KioskPlayerState>("loading");
   const detailRef = useRef("Loading YouTube");
@@ -153,18 +159,42 @@ function YoutubeKioskPlayerSession({ request }: YoutubeKioskPlayerProps) {
     }
 
     syncPlayerToClock(true, player);
-    player.setVolume(request.volume);
-    player.unMute();
+    applyYouTubeVolume(player, localVolumeRef.current, { allowUnmute: true });
     markActivated();
     player.playVideo();
     setStatus("playing", "Playing queued video", player);
   }, [
     assertQueuedVideo,
     markActivated,
-    request.volume,
     setStatus,
     syncPlayerToClock,
   ]);
+
+  useEffect(() => {
+    const updateLocalVolume = () => {
+      setLocalVolume(getWindowLocalVolume(request.volume));
+    };
+
+    updateLocalVolume();
+    window.addEventListener("hashchange", updateLocalVolume);
+
+    return () => {
+      window.removeEventListener("hashchange", updateLocalVolume);
+    };
+  }, [request.volume]);
+
+  useEffect(() => {
+    localVolumeRef.current = localVolume;
+
+    const player = playerRef.current;
+    if (!player) {
+      return;
+    }
+
+    applyYouTubeVolume(player, localVolume, {
+      allowUnmute: activatedRef.current,
+    });
+  }, [localVolume]);
 
   useEffect(() => {
     let disposed = false;
@@ -195,8 +225,9 @@ function YoutubeKioskPlayerSession({ request }: YoutubeKioskPlayerProps) {
                 return;
               }
 
-              event.target.setVolume(request.volume);
-              event.target.mute();
+              applyYouTubeVolume(event.target, localVolumeRef.current, {
+                allowUnmute: false,
+              });
               syncPlayerToClock(true, event.target);
               event.target.playVideo();
               setStatus("blocked", "Buffering muted video", event.target);
@@ -280,7 +311,6 @@ function YoutubeKioskPlayerSession({ request }: YoutubeKioskPlayerProps) {
     allowedVideoId,
     assertQueuedVideo,
     request,
-    request.volume,
     publishStatus,
     setStatus,
     stopWithError,
@@ -310,6 +340,14 @@ function YoutubeKioskPlayerSession({ request }: YoutubeKioskPlayerProps) {
       ) : null}
     </main>
   );
+}
+
+function getWindowLocalVolume(fallbackVolume: number): number {
+  if (typeof window === "undefined") {
+    return fallbackVolume;
+  }
+
+  return resolveLocalKioskVolume(window.location.hash, fallbackVolume);
 }
 
 function loadYouTubeApi(): Promise<void> {

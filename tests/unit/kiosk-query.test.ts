@@ -33,6 +33,17 @@ describe("parseKioskQuery", () => {
     }
   });
 
+  it("clamps negative volume to silence", () => {
+    const result = parseKioskQuery(
+      new URLSearchParams("videoId=dQw4w9WgXcQ&volume=-20"),
+    );
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.volume).toBe(0);
+    }
+  });
+
   it("accepts a shared server playback clock", () => {
     const result = parseKioskQuery(
       new URLSearchParams(

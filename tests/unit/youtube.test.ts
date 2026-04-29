@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyYouTubeVolume,
   buildKioskStatusTitle,
   buildYouTubePlayerVars,
   computeSynchronizedPlaybackTime,
   isUnexpectedVideo,
   mapYouTubeError,
+  resolveLocalKioskVolume,
   shouldCorrectPlaybackDrift,
 } from "@/lib/youtube";
 
@@ -74,5 +76,60 @@ describe("youtube helpers", () => {
     expect(buildKioskStatusTitle("playing", 12.2, -0.25, "Playing now")).toBe(
       "drp-tv:playing:t=12:d=-0.2:m=Playing_now",
     );
+  });
+
+  it("keeps zero volume muted even during activation", () => {
+    const calls: string[] = [];
+    const volume = applyYouTubeVolume(
+      {
+        setVolume: (value) => calls.push(`set:${value}`),
+        mute: () => calls.push("mute"),
+        unMute: () => calls.push("unmute"),
+      },
+      0,
+      { allowUnmute: true },
+    );
+
+    expect(volume).toBe(0);
+    expect(calls).toEqual(["set:0", "mute"]);
+  });
+
+  it("sets and unmutes positive activation volume", () => {
+    const calls: string[] = [];
+    const volume = applyYouTubeVolume(
+      {
+        setVolume: (value) => calls.push(`set:${value}`),
+        mute: () => calls.push("mute"),
+        unMute: () => calls.push("unmute"),
+      },
+      10,
+      { allowUnmute: true },
+    );
+
+    expect(volume).toBe(10);
+    expect(calls).toEqual(["set:10", "unmute"]);
+  });
+
+  it("sets but keeps ready playback muted before activation", () => {
+    const calls: string[] = [];
+    const volume = applyYouTubeVolume(
+      {
+        setVolume: (value) => calls.push(`set:${value}`),
+        mute: () => calls.push("mute"),
+        unMute: () => calls.push("unmute"),
+      },
+      65,
+      { allowUnmute: false },
+    );
+
+    expect(volume).toBe(65);
+    expect(calls).toEqual(["set:65", "mute"]);
+  });
+
+  it("reads local S&box volume overrides from the URL fragment", () => {
+    expect(resolveLocalKioskVolume("#localVolume=37", 65)).toBe(37);
+    expect(resolveLocalKioskVolume("#foo=1&localVolume=0", 65)).toBe(0);
+    expect(resolveLocalKioskVolume("#localVolume=999", 65)).toBe(100);
+    expect(resolveLocalKioskVolume("#localVolume=nope", 65)).toBe(65);
   });
 });
