@@ -70,9 +70,22 @@ export async function GET(req: Request): Promise<NextResponse> {
       clientSecret,
       redirectUri,
     });
-  } catch {
-    await markError(serverSaveId, pairingCode, record, "token_exchange_failed");
-    return redirectLanding(baseUrl, pairingCode, "token_exchange_failed");
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : "token_exchange_failed";
+    // Discord's token endpoint returns a JSON body with { error, error_description }
+    // on failure. We log it server-side (visible in Vercel function logs) so an
+    // operator can diagnose mismatched client_secret / redirect_uri without
+    // exposing details to the player. The landing page only sees the short code.
+    console.error("[link-discord] token exchange failed", {
+      reason,
+      clientIdSuffix: clientId?.slice(-4) ?? "?",
+      redirectUri,
+      hasSecret: Boolean(clientSecret),
+      secretLength: clientSecret?.length ?? 0,
+    });
+    const tag = reason.startsWith("discord_") ? reason : "token_exchange_failed";
+    await markError(serverSaveId, pairingCode, record, tag);
+    return redirectLanding(baseUrl, pairingCode, tag);
   }
 
   let me: { id: string; username: string; global_name?: string | null };
@@ -176,10 +189,40 @@ async function exchangeToken(params: {
     body: body.toString(),
     cache: "no-store",
   });
+
+  // Always read the body — Discord returns useful diagnostics on both
+  // success and failure. On failure we log it server-side and translate
+  // the OAuth error code into a distinct landing-page reason so the
+  // operator can tell invalid_client / invalid_grant / redirect_uri_mismatch
+  // apart at a glance.
+  const text = await res.text();
+
   if (!res.ok) {
-    throw new Error(`token_status_${res.status}`);
+    let oauthError: string | undefined;
+    let oauthDescription: string | undefined;
+    try {
+      const parsed = JSON.parse(text) as { error?: string; error_description?: string };
+      oauthError = parsed.error;
+      oauthDescription = parsed.error_description;
+    } catch {
+      // not JSON, fall through with raw text
+    }
+    console.error("[link-discord] discord token endpoint rejected", {
+      status: res.status,
+      oauthError,
+      oauthDescription,
+      bodyPreview: text.slice(0, 400),
+    });
+    const tag = oauthError ? `discord_${oauthError}` : `token_status_${res.status}`;
+    throw new Error(tag);
   }
-  const json = (await res.json()) as { access_token?: string };
+
+  let json: { access_token?: string };
+  try {
+    json = JSON.parse(text) as { access_token?: string };
+  } catch {
+    throw new Error("token_response_invalid_json");
+  }
   if (!json.access_token) {
     throw new Error("token_missing");
   }
