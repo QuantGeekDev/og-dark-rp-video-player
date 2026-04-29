@@ -1,5 +1,7 @@
 # OG Dark RP Site And TV Kiosk
 
+<!-- Last redeploy bump: 2026-04-30 — rotate DISCORD_CLIENT_SECRET, retry /linkdiscord -->
+
 This Next.js app now has three public jobs:
 
 - `/` is the default OG Dark RP landing page.
