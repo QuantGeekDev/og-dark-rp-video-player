@@ -7,7 +7,7 @@ This document records the April 2026 shift for `darkrp-tv-kiosk`: the app is no 
 | Route | Audience | Responsibility |
 | --- | --- | --- |
 | `/` | Players, server visitors, marketing links | The default OG Dark RP landing page. It introduces the server, jobs, economy loops, law systems, vehicles, organizations, and launch notes. |
-| `/join-server` | Players, Discord/chat links | Permanent HTTPS join page that attempts to open Steam and falls back to a manual button. |
+| `/join-server` | Players, Discord/chat links | Permanent HTTPS join page that attempts to open Steam and falls back to a copyable console command. |
 | `/rules` | Players, staff, server visitors | A searchable rules browser generated from the mirrored `content/server-rules` markdown rulebook. |
 | `/embed/youtube` | OG Dark RP `WebPanel` televisions | A fullscreen kiosk route that renders exactly one normalized YouTube queue item from the game. |
 | `/api/health` | Deployment checks | Small health response for platform and tunnel checks. |
@@ -117,12 +117,18 @@ For chat messages, use the permanent HTTPS route:
 https://ogdarkrp.com/join-server
 ```
 
-Do not use `www.ogdarkrp.og`; the production domain is `ogdarkrp.com`. The `/join-server` page attempts to open the underlying Steam direct-connect URL and shows a manual button for browsers that block automatic external protocol navigation.
+Do not use `www.ogdarkrp.og`; the production domain is `ogdarkrp.com`. The `/join-server` page attempts to open the underlying Steam launch URL and shows a copyable console command for browsers or Steam states that block automatic external protocol navigation.
 
-The underlying Steam direct-connect URL is:
+The underlying Steam launch URL uses the current S&box dedicated-server Steam ID:
 
 ```text
-steam://connect/79.155.36.215:27016?appid=590830
+steam://run/590830//+connect%2090285151248296973/
+```
+
+The visible console fallback is:
+
+```text
+connect 90285151248296973
 ```
 
 The join route reads `NEXT_PUBLIC_OG_DARKRP_JOIN_URL` first, so Vercel can override the Steam target without a code deploy. Prefer replacing the IP form with a stable Steam server ID once `+net_game_server_token` is configured:

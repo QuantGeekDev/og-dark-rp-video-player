@@ -2,7 +2,12 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import JoinServerClient from "./JoinServerClient";
-import { getSteamJoinUrl, joinServerUrl, sboxPackageUrl } from "@/lib/server-join";
+import {
+  getSteamJoinUrl,
+  joinServerUrl,
+  sboxPackageUrl,
+  serverConsoleCommand,
+} from "@/lib/server-join";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://ogdarkrp.com"),
@@ -83,11 +88,15 @@ export default function JoinServerPage() {
             <div className="flex gap-3 border border-black/10 p-3">
               <span className="mt-2 h-2.5 w-2.5 shrink-0 bg-[#ff4d4d]" />
               <p className="text-base font-bold leading-7 text-black/70">
-                If the prompt is blocked, press the manual button below.
+                If Steam opens without joining, copy the console fallback below.
               </p>
             </div>
           </div>
-          <JoinServerClient joinUrl={steamJoinUrl} packageUrl={sboxPackageUrl} />
+          <JoinServerClient
+            joinUrl={steamJoinUrl}
+            packageUrl={sboxPackageUrl}
+            consoleCommand={serverConsoleCommand}
+          />
         </div>
       </section>
     </main>
