@@ -122,7 +122,7 @@ Do not use `www.ogdarkrp.og`; the production domain is `ogdarkrp.com`. The `/joi
 The underlying Steam direct-connect URL is:
 
 ```text
-steam://run/590830//+connect%2079.155.36.215%3A27015/
+steam://connect/79.155.36.215:27016?appid=590830
 ```
 
 The join route reads `NEXT_PUBLIC_OG_DARKRP_JOIN_URL` first, so Vercel can override the Steam target without a code deploy. Prefer replacing the IP form with a stable Steam server ID once `+net_game_server_token` is configured:
