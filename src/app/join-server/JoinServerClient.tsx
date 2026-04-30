@@ -44,7 +44,7 @@ export default function JoinServerClient({
           onClick={() => setAttempted(true)}
           className="inline-flex h-12 items-center justify-center bg-[#ff4d4d] px-6 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-[#d83232]"
         >
-          Open Steam
+          Try Auto-Join
         </a>
         <a
           href={packageUrl}
@@ -57,7 +57,7 @@ export default function JoinServerClient({
       </div>
       <div className="grid gap-2 border border-black/10 bg-white/45 p-3">
         <div className="text-xs font-black uppercase tracking-[0.18em] text-black/45">
-          Console fallback
+          Console command
         </div>
         <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
           <code className="min-w-0 overflow-x-auto border border-black/10 bg-black/5 px-3 py-2 text-sm font-black text-black/72">
@@ -74,8 +74,8 @@ export default function JoinServerClient({
       </div>
       <p className="text-sm font-bold leading-6 text-black/55">
         {attempted
-          ? "If Steam opened without joining, paste the console command in s&box."
-          : "Opening Steam..."}
+          ? "If auto-join only opened S&box, search OG DarkRP in the server browser or paste the console command."
+          : "Trying Steam auto-join..."}
       </p>
     </div>
   );

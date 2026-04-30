@@ -7,7 +7,7 @@ This document records the April 2026 shift for `darkrp-tv-kiosk`: the app is no 
 | Route | Audience | Responsibility |
 | --- | --- | --- |
 | `/` | Players, server visitors, marketing links | The default OG Dark RP landing page. It introduces the server, jobs, economy loops, law systems, vehicles, organizations, and launch notes. |
-| `/join-server` | Players, Discord/chat links | Permanent HTTPS join page that attempts to open Steam and falls back to a copyable console command. |
+| `/join-server` | Players, Discord/chat links | Permanent HTTPS join page that attempts Steam auto-join and gives manual server-browser and console instructions. |
 | `/rules` | Players, staff, server visitors | A searchable rules browser generated from the mirrored `content/server-rules` markdown rulebook. |
 | `/embed/youtube` | OG Dark RP `WebPanel` televisions | A fullscreen kiosk route that renders exactly one normalized YouTube queue item from the game. |
 | `/api/health` | Deployment checks | Small health response for platform and tunnel checks. |
@@ -117,7 +117,7 @@ For chat messages, use the permanent HTTPS route:
 https://ogdarkrp.com/join-server
 ```
 
-Do not use `www.ogdarkrp.og`; the production domain is `ogdarkrp.com`. The `/join-server` page attempts to open the underlying Steam launch URL and shows a copyable console command for browsers or Steam states that block automatic external protocol navigation.
+Do not use `www.ogdarkrp.og`; the production domain is `ogdarkrp.com`. The `/join-server` page attempts to open the underlying Steam launch URL, but the copy is explicit that Steam auto-join can be flaky. It also tells players to search `OG DarkRP` in the S&box server browser or paste the console command below.
 
 The underlying Steam launch URL uses the current S&box dedicated-server Steam ID:
 

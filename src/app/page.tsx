@@ -207,12 +207,12 @@ export default function Home() {
               glowing in apartments above the street.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <a
-                href="#join"
+              <Link
+                href={joinServerPath}
                 className="inline-flex h-12 items-center justify-center border border-[#ff4d4d] bg-[#ff4d4d] px-6 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-[#d83232]"
               >
                 Enter Downtown
-              </a>
+              </Link>
               <a
                 href={discordInviteUrl}
                 target="_blank"

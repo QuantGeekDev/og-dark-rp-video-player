@@ -68,8 +68,8 @@ export default function JoinServerPage() {
             Join OG DarkRP
           </h1>
           <p className="mt-6 max-w-2xl text-base font-medium leading-7 text-white/76 sm:text-lg sm:leading-8">
-            Open the live S&box server from this permanent link. Your browser may
-            ask for permission before Steam launches.
+            This page tries to open Steam and join automatically. Steam's
+            browser handoff can be flaky, so keep the manual paths ready.
           </p>
         </div>
 
@@ -81,14 +81,23 @@ export default function JoinServerPage() {
             <div className="flex gap-3 border border-black/10 p-3">
               <span className="mt-2 h-2.5 w-2.5 shrink-0 bg-[#ff4d4d]" />
               <p className="text-base font-bold leading-7 text-black/70">
-                Starts s&box through Steam and connects to the current OG DarkRP
-                server.
+                Press Try Auto-Join to open Steam. It may only launch S&box,
+                especially if S&box is already running.
               </p>
             </div>
             <div className="flex gap-3 border border-black/10 p-3">
               <span className="mt-2 h-2.5 w-2.5 shrink-0 bg-[#ff4d4d]" />
               <p className="text-base font-bold leading-7 text-black/70">
-                If Steam opens without joining, copy the console fallback below.
+                Manual browser path: open the S&box server browser, type
+                <span className="font-black text-black"> OG DarkRP</span>, then
+                join the live server.
+              </p>
+            </div>
+            <div className="flex gap-3 border border-black/10 p-3">
+              <span className="mt-2 h-2.5 w-2.5 shrink-0 bg-[#ff4d4d]" />
+              <p className="text-base font-bold leading-7 text-black/70">
+                Manual console path: open the console in S&box and paste the
+                command below.
               </p>
             </div>
           </div>
