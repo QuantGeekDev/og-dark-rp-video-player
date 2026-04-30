@@ -110,13 +110,25 @@ https://discord.gg/b2ursP823g
 
 The source of truth in the gamemode is `Code/UI/OgPauseMenu.razor`, where `DiscordInviteUrl` feeds the rich pause-menu link.
 
-For the launch CTA, the safe public target is the package page:
+For the launch CTA, the primary public target is the Steam direct-connect URL:
+
+```text
+steam://run/590830//+connect%2079.155.36.215%3A27015/
+```
+
+The landing page reads `NEXT_PUBLIC_OG_DARKRP_JOIN_URL` first, so Vercel can override the target without a code deploy. Prefer replacing the IP form with a stable Steam server ID once `+net_game_server_token` is configured:
+
+```text
+steam://run/590830//+connect%20SERVER_STEAM_ID64/
+```
+
+The secondary CTA stays on the package page:
 
 ```text
 https://sbox.game/artisan/darkrpog
 ```
 
-That page is expected to expose the s&box package UI and play/server-list flow. A more direct website button is technically plausible through Steam's browser protocol because s&box reads Steam URL launch arguments and the menu honors `-rungame`.
+That page is expected to expose the s&box package UI and play/server-list flow. The direct website button uses Steam's browser protocol because s&box accepts the `+connect` launch command.
 
 Package modal shape:
 
@@ -124,13 +136,11 @@ Package modal shape:
 steam://run/590830//-rungame%20artisan.darkrpog/
 ```
 
-Candidate direct server shape, once a stable production endpoint is known:
+Direct server shape:
 
 ```text
 steam://run/590830//+connect%20<server-id-or-ip:port>/
 ```
-
-Do not ship the direct connect variant until it has been tested against the live server. The game can connect by lobby Steam ID or IP:port internally, but the public site should not publish a guessed server target. Avoid combining `-rungame` and `+connect` in one public link until command ordering has been verified.
 
 ## Development Checks
 

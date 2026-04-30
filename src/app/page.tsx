@@ -41,6 +41,9 @@ const liveStats = [
 
 const discordInviteUrl = "https://discord.gg/b2ursP823g";
 const sboxPackageUrl = "https://sbox.game/artisan/darkrpog";
+const defaultJoinUrl = "steam://run/590830//+connect%2079.155.36.215%3A27015/";
+const joinUrl = process.env.NEXT_PUBLIC_OG_DARKRP_JOIN_URL?.trim() || defaultJoinUrl;
+const joinUrlIsSteamProtocol = joinUrl.startsWith("steam:");
 
 const featureSignals = [
   "Mayor laws, taxes, treasury and public broadcasts",
@@ -422,19 +425,21 @@ export default function Home() {
             </div>
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <a
+                href={joinUrl}
+                target={joinUrlIsSteamProtocol ? undefined : "_blank"}
+                rel={joinUrlIsSteamProtocol ? undefined : "noreferrer"}
+                aria-label="Join OG DarkRP in s&box"
+                className="inline-flex h-12 items-center justify-center bg-[#ff4d4d] px-6 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-[#d83232]"
+              >
+                Join OG DarkRP
+              </a>
+              <a
                 href={sboxPackageUrl}
                 target="_blank"
                 rel="noreferrer"
-                aria-label="Join server on sbox.game"
-                className="inline-flex h-12 items-center justify-center bg-[#ff4d4d] px-6 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-[#d83232]"
-              >
-                Join Server
-              </a>
-              <a
-                href="#top"
                 className="inline-flex h-12 items-center justify-center bg-[#050506] px-6 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-[#2b2421]"
               >
-                Back To Broadcast
+                View On S&box
               </a>
             </div>
           </div>
