@@ -7,6 +7,7 @@ This document records the April 2026 shift for `darkrp-tv-kiosk`: the app is no 
 | Route | Audience | Responsibility |
 | --- | --- | --- |
 | `/` | Players, server visitors, marketing links | The default OG Dark RP landing page. It introduces the server, jobs, economy loops, law systems, vehicles, organizations, and launch notes. |
+| `/join-server` | Players, Discord/chat links | Permanent HTTPS join page that attempts to open Steam and falls back to a manual button. |
 | `/rules` | Players, staff, server visitors | A searchable rules browser generated from the mirrored `content/server-rules` markdown rulebook. |
 | `/embed/youtube` | OG Dark RP `WebPanel` televisions | A fullscreen kiosk route that renders exactly one normalized YouTube queue item from the game. |
 | `/api/health` | Deployment checks | Small health response for platform and tunnel checks. |
@@ -110,13 +111,21 @@ https://discord.gg/b2ursP823g
 
 The source of truth in the gamemode is `Code/UI/OgPauseMenu.razor`, where `DiscordInviteUrl` feeds the rich pause-menu link.
 
-For the launch CTA, the primary public target is the Steam direct-connect URL:
+For chat messages, use the permanent HTTPS route:
+
+```text
+https://ogdarkrp.com/join-server
+```
+
+Do not use `www.ogdarkrp.og`; the production domain is `ogdarkrp.com`. The `/join-server` page attempts to open the underlying Steam direct-connect URL and shows a manual button for browsers that block automatic external protocol navigation.
+
+The underlying Steam direct-connect URL is:
 
 ```text
 steam://run/590830//+connect%2079.155.36.215%3A27015/
 ```
 
-The landing page reads `NEXT_PUBLIC_OG_DARKRP_JOIN_URL` first, so Vercel can override the target without a code deploy. Prefer replacing the IP form with a stable Steam server ID once `+net_game_server_token` is configured:
+The join route reads `NEXT_PUBLIC_OG_DARKRP_JOIN_URL` first, so Vercel can override the Steam target without a code deploy. Prefer replacing the IP form with a stable Steam server ID once `+net_game_server_token` is configured:
 
 ```text
 steam://run/590830//+connect%20SERVER_STEAM_ID64/

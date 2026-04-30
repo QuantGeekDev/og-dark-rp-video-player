@@ -5,6 +5,7 @@
 This Next.js app now has three public jobs:
 
 - `/` is the default OG Dark RP landing page.
+- `/join-server` is the permanent chat/share link for opening the live server in s&box.
 - `/embed/youtube` is the hosted YouTube kiosk wrapper for OG Dark RP televisions.
 - `/link-discord` plus `/api/link-discord/*` is the Discord OAuth verifier that backs the in-game `/linkdiscord` reward command.
 
