@@ -214,7 +214,8 @@ function PendingPanel({ view }: { view: PendingView }) {
       <p style={{ lineHeight: 1.55, margin: "0 0 24px", color: "#cab" }}>
         After Discord redirects you back here, you can close the tab and switch
         back to the game. Your <strong>+{REWARD_DISPLAY}</strong> reward will arrive
-        automatically.
+        automatically, and your server nickname will match your RP name when
+        Discord permissions allow it.
       </p>
       <a
         href={startUrl}

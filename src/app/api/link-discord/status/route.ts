@@ -54,6 +54,8 @@ export async function GET(req: Request): Promise<NextResponse> {
     discordId: record.discordId,
     discordUsername: record.discordUsername,
     rewardEligible: record.rewardEligible,
+    nicknameSyncAllowed: record.nicknameSyncAllowed,
+    nicknameSyncBlockedReason: record.nicknameSyncBlockedReason,
     error: record.error,
   };
 

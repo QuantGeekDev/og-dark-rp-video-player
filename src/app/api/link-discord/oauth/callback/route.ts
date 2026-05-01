@@ -128,6 +128,8 @@ export async function GET(req: Request): Promise<NextResponse> {
   }
 
   let rewardEligible = claim.value;
+  let nicknameSyncAllowed = claim.value;
+  let nicknameSyncBlockedReason: string | undefined;
   if (!rewardEligible) {
     const existing = await kv.get<RewardLedgerEntry>(
       rewardLedgerDiscordKey(discordId),
@@ -135,6 +137,10 @@ export async function GET(req: Request): Promise<NextResponse> {
     if (existing.ok && existing.value && existing.value.firstSteamId === record.steamId) {
       // Same player retrying — still not eligible (already paid before).
       rewardEligible = false;
+      nicknameSyncAllowed = true;
+    } else if (existing.ok && existing.value) {
+      nicknameSyncAllowed = false;
+      nicknameSyncBlockedReason = "discord_already_linked_to_other_steam";
     }
   } else {
     await kv.setJson(
@@ -150,6 +156,8 @@ export async function GET(req: Request): Promise<NextResponse> {
     discordId,
     discordUsername,
     rewardEligible,
+    nicknameSyncAllowed,
+    nicknameSyncBlockedReason,
   };
   const persist = await kv.setJson(
     codeKey(serverSaveId, pairingCode),

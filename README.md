@@ -65,6 +65,9 @@ Public origin: `https://ogdarkrp.com` (production) and the Vercel preview origin
 - `GET /api/link-discord/status?code=...` — gamemode poll endpoint. Requires
   the `x-link-secret` header. Use `&consume=1` after the gamemode has banked
   the reward.
+- `POST /api/link-discord/nickname-sync` — gamemode to web. Best-effort
+  Discord bot nickname sync that sets a linked guild member's nickname to their
+  current RP first and last name. Requires the `x-link-secret` header.
 
 Setup:
 
@@ -77,7 +80,12 @@ Setup:
 4. Set the rest of the env vars listed in [`.env.example`](./.env.example).
    Generate `LINK_SHARED_SECRET` with `openssl rand -hex 32` and paste the same
    value into the gamemode's `drp.discord_link_shared_secret` ConVar.
-5. Pull env vars locally for dev:
+5. For RP-name nickname sync, add a bot user to the Discord app, invite it to
+   the guild with **Manage Nicknames**, set `DISCORD_BOT_TOKEN`, and flip
+   `DISCORD_NICKNAME_SYNC_ENABLED=true` after a dry-run test. The bot role must
+   be above normal member roles it should rename. Discord will reject guild
+   owners and members whose highest role is equal to or above the bot role.
+6. Pull env vars locally for dev:
 
    ```bash
    npx vercel link
@@ -97,6 +105,9 @@ Troubleshooting:
 - **`kv_unavailable`** — Upstash provisioning incomplete. Confirm
   `KV_REST_API_URL` and `KV_REST_API_TOKEN` exist in the Vercel project env
   for the relevant scope (Production / Preview / Development).
+- **`discord_forbidden_role_hierarchy`** from nickname sync — the bot lacks
+  Manage Nicknames or its role is too low for that member. Linking and rewards
+  still succeed; fix Discord role order, then run the in-game manual sync.
 
 ## Notes
 

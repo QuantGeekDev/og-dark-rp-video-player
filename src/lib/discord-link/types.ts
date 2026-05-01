@@ -15,6 +15,8 @@ export interface LinkRecord {
   discordId?: string;
   discordUsername?: string;
   rewardEligible?: boolean;
+  nicknameSyncAllowed?: boolean;
+  nicknameSyncBlockedReason?: string;
   error?: string;
 }
 
@@ -35,6 +37,8 @@ export interface StatusResponse {
   discordId?: string;
   discordUsername?: string;
   rewardEligible?: boolean;
+  nicknameSyncAllowed?: boolean;
+  nicknameSyncBlockedReason?: string;
   error?: string;
 }
 
@@ -42,6 +46,40 @@ export interface RewardLedgerEntry {
   firstSteamId: string;
   firstClaimAtUtc: string;
   serverSaveId: string;
+}
+
+export type NicknameSyncReason =
+  | "linked"
+  | "rpname_changed"
+  | "join_reconcile"
+  | "admin_manual"
+  | "admin_force_link";
+
+export interface NicknameSyncRequest {
+  serverSaveId: string;
+  steamId: string;
+  discordId: string;
+  displayName: string;
+  reason: NicknameSyncReason;
+}
+
+export interface NicknameSyncResponse {
+  ok: boolean;
+  status:
+    | "synced"
+    | "dry_run"
+    | "disabled"
+    | "skipped"
+    | "forbidden"
+    | "not_found"
+    | "rate_limited"
+    | "bad_request"
+    | "server_misconfigured"
+    | "discord_error"
+    | "nickname_sync_not_allowed";
+  appliedNick?: string;
+  error?: string;
+  retryAfterSeconds?: number;
 }
 
 export interface KvOk<T> {
