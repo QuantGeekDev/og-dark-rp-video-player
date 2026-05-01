@@ -88,6 +88,8 @@ Setup:
    need to ship the bot token without syncing yet. The bot role must be above
    normal member roles it should rename — Discord will reject guild owners
    and members whose highest role is equal to or above the bot role.
+   Note: Vercel injects env vars at build time, so adding or changing these
+   values requires a redeploy before they take effect at runtime.
 6. Pull env vars locally for dev:
 
    ```bash
