@@ -23,9 +23,10 @@ export type YouTubePlayerVars = {
 
 // YouTube IFrame API quality tiers (low to high):
 // "tiny" | "small" (240p) | "medium" (360p) | "large" (480p) | "hd720" | "hd1080" | "highres"
-// In-world TV textures composite at low res, so capping at "small" is enough
-// for visual fidelity and dramatically reduces CEF decode + GPU paint cost.
-export const KIOSK_DEFAULT_QUALITY: KioskQualityTier = "small";
+// In-world TV textures composite at low res relative to a real monitor, so
+// capping at "large" (480p) is the sweet spot: visual fidelity stays acceptable
+// for readable text/faces while CEF decode + GPU paint cost stays low.
+export const KIOSK_DEFAULT_QUALITY: KioskQualityTier = "large";
 export type KioskQualityTier =
   | "tiny"
   | "small"

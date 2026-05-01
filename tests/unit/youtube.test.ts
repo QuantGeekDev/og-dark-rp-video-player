@@ -44,7 +44,7 @@ describe("youtube helpers", () => {
     expect(vars).not.toHaveProperty("playlist");
   });
 
-  it("caps player vars to the lowest playable quality tier", () => {
+  it("caps player vars to the kiosk default quality tier", () => {
     const vars = buildYouTubePlayerVars(
       {
         ok: true,
@@ -58,18 +58,24 @@ describe("youtube helpers", () => {
     );
 
     expect(vars.vq).toBe(KIOSK_DEFAULT_QUALITY);
-    expect(vars.vq).toBe("small");
+    expect(vars.vq).toBe("large");
   });
 
   it("identifies playback quality above the kiosk cap", () => {
-    expect(isAboveKioskQualityCap("hd1080", "small")).toBe(true);
+    expect(isAboveKioskQualityCap("hd1080", "large")).toBe(true);
+    expect(isAboveKioskQualityCap("hd720", "large")).toBe(true);
+    expect(isAboveKioskQualityCap("large", "large")).toBe(false);
+    expect(isAboveKioskQualityCap("medium", "large")).toBe(false);
+    expect(isAboveKioskQualityCap("small", "large")).toBe(false);
+    expect(isAboveKioskQualityCap("tiny", "large")).toBe(false);
+    expect(isAboveKioskQualityCap(undefined, "large")).toBe(false);
+    expect(isAboveKioskQualityCap("", "large")).toBe(false);
+    expect(isAboveKioskQualityCap("garbage", "large")).toBe(false);
+
+    // Verify the rank table works for an asymmetric cap too.
     expect(isAboveKioskQualityCap("hd720", "small")).toBe(true);
     expect(isAboveKioskQualityCap("medium", "small")).toBe(true);
     expect(isAboveKioskQualityCap("small", "small")).toBe(false);
-    expect(isAboveKioskQualityCap("tiny", "small")).toBe(false);
-    expect(isAboveKioskQualityCap(undefined, "small")).toBe(false);
-    expect(isAboveKioskQualityCap("", "small")).toBe(false);
-    expect(isAboveKioskQualityCap("garbage", "small")).toBe(false);
   });
 
   it("maps known YouTube errors", () => {
