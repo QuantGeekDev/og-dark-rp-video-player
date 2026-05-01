@@ -81,10 +81,13 @@ Setup:
    Generate `LINK_SHARED_SECRET` with `openssl rand -hex 32` and paste the same
    value into the gamemode's `drp.discord_link_shared_secret` ConVar.
 5. For RP-name nickname sync, add a bot user to the Discord app, invite it to
-   the guild with **Manage Nicknames**, set `DISCORD_BOT_TOKEN`, and flip
-   `DISCORD_NICKNAME_SYNC_ENABLED=true` after a dry-run test. The bot role must
-   be above normal member roles it should rename. Discord will reject guild
-   owners and members whose highest role is equal to or above the bot role.
+   the guild with **Manage Nicknames**, and set `DISCORD_BOT_TOKEN` plus
+   `DISCORD_NICKNAME_GUILD_ID` on Vercel. That alone enables the feature.
+   Use `DISCORD_NICKNAME_SYNC_DRY_RUN=true` for a no-op rehearsal, or
+   `DISCORD_NICKNAME_SYNC_ENABLED=false` as an explicit kill switch when you
+   need to ship the bot token without syncing yet. The bot role must be above
+   normal member roles it should rename — Discord will reject guild owners
+   and members whose highest role is equal to or above the bot role.
 6. Pull env vars locally for dev:
 
    ```bash

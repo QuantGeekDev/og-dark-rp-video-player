@@ -35,7 +35,12 @@ export async function syncDiscordGuildNickname(
   },
   fetchImpl: FetchLike = fetch,
 ): Promise<NicknameSyncResponse> {
-  if (process.env.DISCORD_NICKNAME_SYNC_ENABLED !== "true") {
+  // Explicit kill switch: only an explicit "false" disables the feature.
+  // Otherwise the feature self-enables when DISCORD_BOT_TOKEN + a guild id
+  // are configured. Setting DISCORD_BOT_TOKEN alone used to silently no-op
+  // because the flag also had to be flipped to "true"; that footgun has
+  // bitten us in production, so the bot token now signals intent to sync.
+  if (process.env.DISCORD_NICKNAME_SYNC_ENABLED === "false") {
     return {
       ok: false,
       status: "disabled",
@@ -66,6 +71,10 @@ export async function syncDiscordGuildNickname(
     process.env.DISCORD_REQUIRED_GUILD_ID;
 
   if (!botToken || !guildId) {
+    console.warn("[link-discord] nickname sync misconfigured", {
+      hasBotToken: Boolean(botToken),
+      hasGuildId: Boolean(guildId),
+    });
     return {
       ok: false,
       status: "server_misconfigured",
@@ -82,11 +91,16 @@ export async function syncDiscordGuildNickname(
         authorization: `Bot ${botToken}`,
         "content-type": "application/json",
         accept: "application/json",
+        // Surfaces in the guild's audit log so staff can see why the bot renamed someone.
+        "x-audit-log-reason": "OG DarkRP nickname sync (RP name)",
       },
       body: JSON.stringify({ nick: normalized.nick }),
       cache: "no-store",
     });
-  } catch {
+  } catch (err) {
+    console.warn("[link-discord] nickname sync transport error", {
+      message: err instanceof Error ? err.message : String(err),
+    });
     return {
       ok: false,
       status: "discord_error",
@@ -104,6 +118,9 @@ export async function syncDiscordGuildNickname(
 
   if (res.status === 429) {
     const retryAfterSeconds = await readRetryAfterSeconds(res);
+    console.warn("[link-discord] nickname sync rate limited", {
+      retryAfterSeconds,
+    });
     return {
       ok: false,
       status: "rate_limited",
@@ -113,10 +130,12 @@ export async function syncDiscordGuildNickname(
   }
 
   if (res.status === 400) {
+    console.warn("[link-discord] nickname sync rejected (400 bad_request)");
     return { ok: false, status: "bad_request", error: "discord_bad_request" };
   }
 
   if (res.status === 401) {
+    console.warn("[link-discord] nickname sync 401: bot token rejected by Discord");
     return {
       ok: false,
       status: "server_misconfigured",
@@ -125,6 +144,9 @@ export async function syncDiscordGuildNickname(
   }
 
   if (res.status === 403) {
+    console.warn(
+      "[link-discord] nickname sync 403: bot lacks Manage Nicknames or its role is below the target's highest role",
+    );
     return {
       ok: false,
       status: "forbidden",
@@ -140,6 +162,9 @@ export async function syncDiscordGuildNickname(
     };
   }
 
+  console.warn("[link-discord] nickname sync unexpected Discord status", {
+    status: res.status,
+  });
   return {
     ok: false,
     status: "discord_error",

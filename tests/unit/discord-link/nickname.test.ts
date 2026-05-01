@@ -100,7 +100,7 @@ describe("syncDiscordGuildNickname", () => {
   beforeEach(setBaseEnv);
   afterEach(clearEnv);
 
-  it("returns disabled without fetching when the feature flag is off", async () => {
+  it("returns disabled without fetching when the kill-switch flag is explicitly false", async () => {
     process.env.DISCORD_NICKNAME_SYNC_ENABLED = "false";
     const fetchImpl = vi.fn() as unknown as FetchLike;
     const result = await syncDiscordGuildNickname(
@@ -108,6 +108,43 @@ describe("syncDiscordGuildNickname", () => {
       fetchImpl,
     );
     expect(result.status).toBe("disabled");
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("self-enables when the bot token + guild are configured and the flag is unset", async () => {
+    delete process.env.DISCORD_NICKNAME_SYNC_ENABLED;
+    const fetchImpl = vi.fn(async () => new Response(null, { status: 204 })) as unknown as FetchLike;
+    const result = await syncDiscordGuildNickname(
+      { discordId: "1499000000000000000", displayName: "John Smith" },
+      fetchImpl,
+    );
+    expect(result).toEqual({ ok: true, status: "synced", appliedNick: "John Smith" });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("sends the X-Audit-Log-Reason header so guild admins can see why a rename happened", async () => {
+    const fetchImpl = vi.fn(async () => new Response(null, { status: 204 })) as unknown as FetchLike;
+    await syncDiscordGuildNickname(
+      { discordId: "1499000000000000000", displayName: "John Smith" },
+      fetchImpl,
+    );
+    const calls = (fetchImpl as unknown as { mock: { calls: unknown[][] } }).mock.calls;
+    expect(calls).toHaveLength(1);
+    const init = calls[0][1] as RequestInit;
+    const headers = init.headers as Record<string, string>;
+    expect(headers["x-audit-log-reason"]).toBeTruthy();
+    expect(headers.authorization).toBe("Bot bot-token");
+  });
+
+  it("returns server_misconfigured when the bot token is missing", async () => {
+    delete process.env.DISCORD_BOT_TOKEN;
+    const fetchImpl = vi.fn() as unknown as FetchLike;
+    const result = await syncDiscordGuildNickname(
+      { discordId: "1499000000000000000", displayName: "John Smith" },
+      fetchImpl,
+    );
+    expect(result.status).toBe("server_misconfigured");
+    expect(result.error).toBe("discord_bot_not_configured");
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
