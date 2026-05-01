@@ -3,13 +3,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { KioskPlaybackRequest } from "@/lib/kiosk-query";
 import {
+  applyYouTubePlaybackRate,
   applyYouTubeVolume,
   buildKioskStatusTitle,
   buildYouTubePlayerVars,
   computeSynchronizedPlaybackTime,
+  isAboveKioskQualityCap,
   isUnexpectedVideo,
+  KIOSK_DEFAULT_QUALITY,
   mapYouTubeError,
+  resolveKioskVolumeMessage,
   resolveLocalKioskVolume,
+  selectPlaybackRateForDrift,
   shouldCorrectPlaybackDrift,
   type KioskPlayerState,
 } from "@/lib/youtube";
@@ -20,7 +25,7 @@ type YoutubeKioskPlayerProps = {
 
 let apiPromise: Promise<void> | undefined;
 const YouTubeApiTimeoutMs = 12_000;
-const SyncIntervalMs = 1_000;
+const SyncIntervalMs = 5_000;
 
 export default function YoutubeKioskPlayer({
   request,
@@ -134,6 +139,7 @@ function YoutubeKioskPlayerSession({ request }: YoutubeKioskPlayerProps) {
       latestDriftRef.current = drift;
 
       if (force || shouldCorrectPlaybackDrift(currentTime, targetTime)) {
+        applyYouTubePlaybackRate(player, 1);
         player.seekTo(targetTime, true);
         latestPlaybackTimeRef.current = targetTime;
         latestDriftRef.current = 0;
@@ -141,6 +147,10 @@ function YoutubeKioskPlayerSession({ request }: YoutubeKioskPlayerProps) {
         return true;
       }
 
+      applyYouTubePlaybackRate(
+        player,
+        selectPlaybackRateForDrift(currentTime, targetTime),
+      );
       publishStatus(stateRef.current, detailRef.current, player);
       return false;
     },
@@ -174,12 +184,20 @@ function YoutubeKioskPlayerSession({ request }: YoutubeKioskPlayerProps) {
     const updateLocalVolume = () => {
       setLocalVolume(getWindowLocalVolume(request.volume));
     };
+    const handleVolumeMessage = (event: MessageEvent) => {
+      const volume = resolveKioskVolumeMessage(event.data);
+      if (volume !== undefined) {
+        setLocalVolume(volume);
+      }
+    };
 
     updateLocalVolume();
     window.addEventListener("hashchange", updateLocalVolume);
+    window.addEventListener("message", handleVolumeMessage);
 
     return () => {
       window.removeEventListener("hashchange", updateLocalVolume);
+      window.removeEventListener("message", handleVolumeMessage);
     };
   }, [request.volume]);
 
@@ -228,6 +246,11 @@ function YoutubeKioskPlayerSession({ request }: YoutubeKioskPlayerProps) {
               applyYouTubeVolume(event.target, localVolumeRef.current, {
                 allowUnmute: false,
               });
+              // Hard-clamp to the kiosk quality cap on cold start. The vq
+              // playerVar is just a hint; setPlaybackQuality is the
+              // authoritative call. Reduces CEF decode + GPU paint cost
+              // dramatically for in-world TV textures.
+              applyKioskQualityCap(event.target);
               syncPlayerToClock(true, event.target);
               event.target.playVideo();
               setStatus("blocked", "Buffering muted video", event.target);
@@ -282,6 +305,17 @@ function YoutubeKioskPlayerSession({ request }: YoutubeKioskPlayerProps) {
 
               stopWithError(mapYouTubeError(Number(event.data ?? 0)));
             },
+            onPlaybackQualityChange: (event) => {
+              if (disposed) {
+                return;
+              }
+
+              // YouTube can switch quality based on bandwidth heuristics;
+              // re-clamp whenever it tries to climb above our cap. This
+              // guarantees the cap holds even if the suggestedQuality hint
+              // and onReady call are ignored mid-stream.
+              applyKioskQualityCap(event.target);
+            },
           },
         });
       })
@@ -302,8 +336,12 @@ function YoutubeKioskPlayerSession({ request }: YoutubeKioskPlayerProps) {
       disposed = true;
       playbackFinishedRef.current = true;
       window.clearInterval(guardInterval);
-      playerRef.current?.stopVideo();
-      playerRef.current?.destroy();
+      const player = playerRef.current;
+      if (player) {
+        player.stopVideo();
+        applyYouTubePlaybackRate(player, 1);
+        player.destroy();
+      }
       playerRef.current = null;
       activatedRef.current = false;
     };
@@ -329,6 +367,7 @@ function YoutubeKioskPlayerSession({ request }: YoutubeKioskPlayerProps) {
           aria-label="Activate queued playback"
           className="interaction-shield"
           type="button"
+          onPointerDown={activatePlayback}
           onClick={activatePlayback}
         />
       ) : null}
@@ -348,6 +387,23 @@ function getWindowLocalVolume(fallbackVolume: number): number {
   }
 
   return resolveLocalKioskVolume(window.location.hash, fallbackVolume);
+}
+
+function applyKioskQualityCap(player: YouTubePlayer): void {
+  try {
+    const current = player.getPlaybackQuality?.();
+    if (isAboveKioskQualityCap(current, KIOSK_DEFAULT_QUALITY)) {
+      player.setPlaybackQuality?.(KIOSK_DEFAULT_QUALITY);
+      return;
+    }
+
+    // Even if not currently above the cap, suggest the cap on cold start so
+    // the player adapts downward instead of upward.
+    player.setPlaybackQuality?.(KIOSK_DEFAULT_QUALITY);
+  } catch {
+    // Older YT API surfaces may not expose setPlaybackQuality; in that case
+    // the vq playerVar hint is the only mechanism and we accept the limit.
+  }
 }
 
 function loadYouTubeApi(): Promise<void> {

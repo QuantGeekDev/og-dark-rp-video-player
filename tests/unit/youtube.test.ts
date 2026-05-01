@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyYouTubePlaybackRate,
   applyYouTubeVolume,
   buildKioskStatusTitle,
   buildYouTubePlayerVars,
   computeSynchronizedPlaybackTime,
+  isAboveKioskQualityCap,
   isUnexpectedVideo,
+  KIOSK_DEFAULT_QUALITY,
   mapYouTubeError,
+  resolveKioskVolumeMessage,
   resolveLocalKioskVolume,
+  selectPlaybackRateForDrift,
   shouldCorrectPlaybackDrift,
 } from "@/lib/youtube";
 
@@ -39,6 +44,34 @@ describe("youtube helpers", () => {
     expect(vars).not.toHaveProperty("playlist");
   });
 
+  it("caps player vars to the lowest playable quality tier", () => {
+    const vars = buildYouTubePlayerVars(
+      {
+        ok: true,
+        videoId: "dQw4w9WgXcQ",
+        start: 0,
+        startedAt: 0,
+        volume: 50,
+        revision: 1,
+      },
+      "https://tv.example.test",
+    );
+
+    expect(vars.vq).toBe(KIOSK_DEFAULT_QUALITY);
+    expect(vars.vq).toBe("small");
+  });
+
+  it("identifies playback quality above the kiosk cap", () => {
+    expect(isAboveKioskQualityCap("hd1080", "small")).toBe(true);
+    expect(isAboveKioskQualityCap("hd720", "small")).toBe(true);
+    expect(isAboveKioskQualityCap("medium", "small")).toBe(true);
+    expect(isAboveKioskQualityCap("small", "small")).toBe(false);
+    expect(isAboveKioskQualityCap("tiny", "small")).toBe(false);
+    expect(isAboveKioskQualityCap(undefined, "small")).toBe(false);
+    expect(isAboveKioskQualityCap("", "small")).toBe(false);
+    expect(isAboveKioskQualityCap("garbage", "small")).toBe(false);
+  });
+
   it("maps known YouTube errors", () => {
     expect(mapYouTubeError(153)).toContain("identity");
     expect(mapYouTubeError(101)).toContain("embedded");
@@ -66,10 +99,30 @@ describe("youtube helpers", () => {
     expect(computeSynchronizedPlaybackTime({ ...request, startedAt: 0 }, 6_500)).toBe(10);
   });
 
-  it("uses a threshold before correcting playback drift", () => {
-    expect(shouldCorrectPlaybackDrift(13.1, 15)).toBe(false);
-    expect(shouldCorrectPlaybackDrift(12.9, 15)).toBe(true);
+  it("reserves seek correction for large playback drift", () => {
+    expect(shouldCorrectPlaybackDrift(11, 15)).toBe(false);
+    expect(shouldCorrectPlaybackDrift(9.9, 15)).toBe(true);
     expect(shouldCorrectPlaybackDrift(Number.NaN, 15)).toBe(false);
+  });
+
+  it("uses playback rate nudges for small playback drift", () => {
+    expect(selectPlaybackRateForDrift(14.5, 15)).toBe(1.05);
+    expect(selectPlaybackRateForDrift(15.5, 15)).toBe(0.95);
+    expect(selectPlaybackRateForDrift(14.9, 15)).toBe(1);
+    expect(selectPlaybackRateForDrift(8, 15)).toBe(1);
+  });
+
+  it("applies clamped playback rates", () => {
+    const calls: number[] = [];
+    const rate = applyYouTubePlaybackRate(
+      {
+        setPlaybackRate: (value) => calls.push(value),
+      },
+      1.8,
+    );
+
+    expect(rate).toBe(1.25);
+    expect(calls).toEqual([1.25]);
   });
 
   it("formats status titles for the S&box web surface bridge", () => {
@@ -131,5 +184,13 @@ describe("youtube helpers", () => {
     expect(resolveLocalKioskVolume("#foo=1&localVolume=0", 65)).toBe(0);
     expect(resolveLocalKioskVolume("#localVolume=999", 65)).toBe(100);
     expect(resolveLocalKioskVolume("#localVolume=nope", 65)).toBe(65);
+  });
+
+  it("reads local S&box volume overrides from postMessage payloads", () => {
+    expect(resolveKioskVolumeMessage({ type: "drp:set-volume", volume: 37 })).toBe(37);
+    expect(resolveKioskVolumeMessage({ type: "drp:set-volume", volume: "0" })).toBe(0);
+    expect(resolveKioskVolumeMessage({ type: "drp:set-volume", volume: 999 })).toBe(100);
+    expect(resolveKioskVolumeMessage({ type: "drp:set-volume", volume: "nope" })).toBeUndefined();
+    expect(resolveKioskVolumeMessage({ type: "other", volume: 50 })).toBeUndefined();
   });
 });

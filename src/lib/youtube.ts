@@ -15,7 +15,52 @@ export type YouTubePlayerVars = {
   start: number;
   origin: string;
   widget_referrer: string;
+  // Suggest the lowest available quality tier to YouTube. This is a hint,
+  // not a hard cap — the player can override it. We re-clamp via
+  // setPlaybackQuality() after onReady and onPlaybackQualityChange.
+  vq: KioskQualityTier;
 };
+
+// YouTube IFrame API quality tiers (low to high):
+// "tiny" | "small" (240p) | "medium" (360p) | "large" (480p) | "hd720" | "hd1080" | "highres"
+// In-world TV textures composite at low res, so capping at "small" is enough
+// for visual fidelity and dramatically reduces CEF decode + GPU paint cost.
+export const KIOSK_DEFAULT_QUALITY: KioskQualityTier = "small";
+export type KioskQualityTier =
+  | "tiny"
+  | "small"
+  | "medium"
+  | "large"
+  | "hd720"
+  | "hd1080"
+  | "highres";
+
+const KIOSK_QUALITY_TIER_RANK: Record<KioskQualityTier, number> = {
+  tiny: 0,
+  small: 1,
+  medium: 2,
+  large: 3,
+  hd720: 4,
+  hd1080: 5,
+  highres: 6,
+};
+
+export function isAboveKioskQualityCap(
+  current: string | undefined,
+  cap: KioskQualityTier,
+): boolean {
+  if (!current) {
+    return false;
+  }
+
+  const currentRank = KIOSK_QUALITY_TIER_RANK[current as KioskQualityTier];
+  const capRank = KIOSK_QUALITY_TIER_RANK[cap];
+  return (
+    typeof currentRank === "number" &&
+    typeof capRank === "number" &&
+    currentRank > capRank
+  );
+}
 
 export type KioskPlayerState =
   | "booting"
@@ -26,11 +71,21 @@ export type KioskPlayerState =
   | "ended"
   | "error";
 
-export const SYNC_DRIFT_THRESHOLD_SECONDS = 2;
+export const SYNC_DRIFT_DEAD_ZONE_SECONDS = 0.15;
+export const SYNC_DRIFT_RATE_THRESHOLD_SECONDS = 0.4;
+export const SYNC_DRIFT_SEEK_THRESHOLD_SECONDS = 5;
+export const SYNC_CATCH_UP_RATE = 1.05;
+export const SYNC_SLOW_DOWN_RATE = 0.95;
+export const KIOSK_VOLUME_MESSAGE_TYPE = "drp:set-volume";
 
 export type YouTubeVolumeController = Pick<
   YouTubePlayer,
   "mute" | "setVolume" | "unMute"
+>;
+
+export type YouTubePlaybackRateController = Pick<
+  YouTubePlayer,
+  "setPlaybackRate"
 >;
 
 export function buildYouTubePlayerVars(
@@ -49,6 +104,7 @@ export function buildYouTubePlayerVars(
     start: request.start,
     origin,
     widget_referrer: origin,
+    vq: KIOSK_DEFAULT_QUALITY,
   };
 }
 
@@ -97,13 +153,43 @@ export function computeSynchronizedPlaybackTime(
 export function shouldCorrectPlaybackDrift(
   currentTime: number,
   targetTime: number,
-  thresholdSeconds = SYNC_DRIFT_THRESHOLD_SECONDS,
+  thresholdSeconds = SYNC_DRIFT_SEEK_THRESHOLD_SECONDS,
 ): boolean {
   if (!Number.isFinite(currentTime) || !Number.isFinite(targetTime)) {
     return false;
   }
 
   return Math.abs(currentTime - targetTime) > thresholdSeconds;
+}
+
+export function selectPlaybackRateForDrift(
+  currentTime: number,
+  targetTime: number,
+): number {
+  if (!Number.isFinite(currentTime) || !Number.isFinite(targetTime)) {
+    return 1;
+  }
+
+  const drift = currentTime - targetTime;
+  const absoluteDrift = Math.abs(drift);
+  if (
+    absoluteDrift <= SYNC_DRIFT_DEAD_ZONE_SECONDS ||
+    absoluteDrift > SYNC_DRIFT_SEEK_THRESHOLD_SECONDS ||
+    absoluteDrift < SYNC_DRIFT_RATE_THRESHOLD_SECONDS
+  ) {
+    return 1;
+  }
+
+  return drift < 0 ? SYNC_CATCH_UP_RATE : SYNC_SLOW_DOWN_RATE;
+}
+
+export function applyYouTubePlaybackRate(
+  player: YouTubePlaybackRateController,
+  rate: number,
+): number {
+  const clampedRate = clampFiniteNumber(rate, 0.75, 1.25);
+  player.setPlaybackRate(clampedRate);
+  return clampedRate;
 }
 
 export function applyYouTubeVolume(
@@ -140,6 +226,31 @@ export function resolveLocalKioskVolume(
   }
 
   return clampFiniteNumber(Number.parseInt(raw, 10), 0, 100);
+}
+
+export function resolveKioskVolumeMessage(data: unknown): number | undefined {
+  if (!data || typeof data !== "object") {
+    return undefined;
+  }
+
+  const message = data as { type?: unknown; volume?: unknown };
+  if (message.type !== KIOSK_VOLUME_MESSAGE_TYPE) {
+    return undefined;
+  }
+
+  const rawVolume = message.volume;
+  const volume =
+    typeof rawVolume === "number"
+      ? rawVolume
+      : typeof rawVolume === "string" && /^-?\d+$/.test(rawVolume.trim())
+        ? Number.parseInt(rawVolume, 10)
+        : Number.NaN;
+
+  if (!Number.isFinite(volume)) {
+    return undefined;
+  }
+
+  return clampFiniteNumber(Math.round(volume), 0, 100);
 }
 
 export function buildKioskStatusTitle(

@@ -8,7 +8,7 @@ declare global {
 
   type YouTubePlayerEvent = {
     target: YouTubePlayer;
-    data?: number;
+    data?: number | string;
   };
 
   type YouTubePlayer = {
@@ -19,8 +19,11 @@ declare global {
     unMute: () => void;
     playVideo: () => void;
     seekTo: (seconds: number, allowSeekAhead: boolean) => void;
+    setPlaybackRate: (suggestedRate: number) => void;
     stopVideo: () => void;
     setVolume: (volume: number) => void;
+    setPlaybackQuality: (suggestedQuality: string) => void;
+    getPlaybackQuality: () => string;
   };
 
   type YouTubeNamespace = {
@@ -36,6 +39,7 @@ declare global {
           onStateChange: (event: YouTubePlayerEvent) => void;
           onError: (event: YouTubePlayerEvent) => void;
           onAutoplayBlocked?: (event: YouTubePlayerEvent) => void;
+          onPlaybackQualityChange?: (event: YouTubePlayerEvent) => void;
         };
       },
     ) => YouTubePlayer;
