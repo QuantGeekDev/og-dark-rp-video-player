@@ -92,7 +92,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   if (reuse.value && reuse.value.expiresAt - Date.now() > 60_000) {
     return NextResponse.json<IssueResponse>({
       code: reuse.value.code,
-      verifyUrl: buildVerifyUrl(baseUrl, reuse.value.code),
+      verifyUrl: buildVerifyUrl(baseUrl, reuse.value.code, normalizedServerSaveId),
       expiresInSeconds: Math.max(
         0,
         Math.floor((reuse.value.expiresAt - Date.now()) / 1000),
@@ -136,12 +136,19 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   return NextResponse.json<IssueResponse>({
     code,
-    verifyUrl: buildVerifyUrl(baseUrl, code),
+    verifyUrl: buildVerifyUrl(baseUrl, code, normalizedServerSaveId),
     expiresInSeconds: PAIRING_TTL_SECONDS,
   });
 }
 
-function buildVerifyUrl(baseUrl: string, code: string): string {
+// The verify URL must round-trip serverSaveId so the landing page can look up
+// the pairing record under the same KV key the issue handler wrote it to
+// (`link:code:<serverSaveId>:<code>`). Production servers launch with
+// `+drp.server_save_id og-darkrp-main`, so omitting it here caused every
+// player to see "Code not found" after running /linkdiscord.
+function buildVerifyUrl(baseUrl: string, code: string, serverSaveId: string): string {
   const trimmed = baseUrl.replace(/\/$/, "");
-  return `${trimmed}/link-discord?code=${encodeURIComponent(code)}`;
+  const params = new URLSearchParams({ code });
+  if (serverSaveId) params.set("serverSaveId", serverSaveId);
+  return `${trimmed}/link-discord?${params.toString()}`;
 }

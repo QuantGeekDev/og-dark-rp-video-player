@@ -104,7 +104,7 @@ describe("POST /api/link-discord/issue", () => {
     expect(res.status).toBe(400);
   });
 
-  it("issues a fresh code and returns a verify URL", async () => {
+  it("issues a fresh code and returns a verify URL that round-trips serverSaveId", async () => {
     const res = await POST(
       buildRequest({
         steamId: "76561",
@@ -115,10 +115,27 @@ describe("POST /api/link-discord/issue", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.code).toMatch(/^[A-HJ-NP-Z2-9]{8}$/);
+    // Regression: serverSaveId MUST be in the URL or the landing page can't
+    // look up the KV record (key is `link:code:<serverSaveId>:<code>`).
+    expect(body.verifyUrl).toBe(
+      `https://og.example/link-discord?code=${encodeURIComponent(body.code)}&serverSaveId=dev`,
+    );
+    expect(body.expiresInSeconds).toBe(900);
+  });
+
+  it("omits serverSaveId from the verify URL when blank", async () => {
+    const res = await POST(
+      buildRequest({
+        steamId: "76561",
+        displayName: "P",
+        serverSaveId: "",
+      }),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
     expect(body.verifyUrl).toBe(
       `https://og.example/link-discord?code=${encodeURIComponent(body.code)}`,
     );
-    expect(body.expiresInSeconds).toBe(900);
   });
 
   it("reuses an existing pending code on rapid retry", async () => {
