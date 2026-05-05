@@ -26,6 +26,24 @@ describe("llm/personas", () => {
     expect(getPersona("ask")).not.toBeNull();
     expect(getPersona("scientist")).not.toBeNull();
     expect(getPersona("bartender")).not.toBeNull();
+    expect(getPersona("colossus")).not.toBeNull();
+  });
+
+  it("colossus persona is configured for the police computer surface", () => {
+    const p = getPersona("colossus");
+    expect(p).not.toBeNull();
+    if (!p) return;
+    expect(p.model).toBe("deepseek-v4-flash");
+    // Replies are spoken by TTS — keep them short. TikTok TTS hard-truncates
+    // around 300 chars; staying under ~200 output tokens prevents mid-syllable cuts.
+    expect(p.maxOutputTokens).toBeLessThanOrEqual(200);
+    // Police-computer surface is a deliberate, in-character interaction; the
+    // budget is generous but not unbounded.
+    expect(p.dailyTokenBudget).toBeGreaterThanOrEqual(20_000);
+    expect(p.dailyTokenBudget).toBeLessThanOrEqual(80_000);
+    // Multi-turn history support — colossus is the only persona that needs
+    // more than a single turn in v1.
+    expect(p.maxHistoryTurns).toBeGreaterThanOrEqual(8);
   });
 
   it("each persona has a non-empty system prompt and sane numeric bounds", () => {
