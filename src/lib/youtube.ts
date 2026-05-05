@@ -69,6 +69,7 @@ export type KioskPlayerState =
   | "playing"
   | "blocked"
   | "autoplay-blocked"
+  | "stalled"
   | "ended"
   | "error";
 
@@ -228,6 +229,33 @@ export function resolveLocalKioskVolume(
 
   return clampFiniteNumber(Number.parseInt(raw, 10), 0, 100);
 }
+
+// `#pause=1` (companion to `#localVolume=N`) tells the kiosk to call
+// `player.pauseVideo()` so AudioOnly radios don't keep CEF decoding YouTube
+// frames into a hidden surface when the local viewer's distance has muted them.
+// `#pause=0` or missing → resume.
+export function resolveLocalKioskPauseFlag(hash: string): boolean {
+  const fragment = hash.trim().replace(/^#/, "");
+  if (!fragment) {
+    return false;
+  }
+
+  const params = new URLSearchParams(fragment);
+  const raw = params.get("pause");
+  if (raw === null) {
+    return false;
+  }
+
+  return raw.trim() === "1";
+}
+
+// Stall detection: if `getCurrentTime()` doesn't advance more than this much
+// across SyncIntervalMs samples while the YT API reports PLAYING, the kiosk
+// is being held by a YouTube interstitial overlay (ad, "Are you still watching",
+// age-gate prompt, etc.) that's invisible to us. Republish state="stalled" so
+// the s&box side can show a recovery overlay and the operator can act.
+export const STALL_DETECTION_MIN_DELTA_SECONDS = 0.05;
+export const STALL_DETECTION_MIN_OBSERVATIONS = 2;
 
 export function resolveKioskVolumeMessage(data: unknown): number | undefined {
   if (!data || typeof data !== "object") {

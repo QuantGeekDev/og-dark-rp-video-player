@@ -68,7 +68,7 @@ iframe#youtube-player,
 .interaction-shield {
   position: absolute;
   inset: 0;
-  z-index: 5;
+  z-index: 20;
   display: block;
   width: 100%;
   height: 100%;
@@ -81,6 +81,7 @@ iframe#youtube-player,
 .status {
   position: relative;
   z-index: 10;
+  pointer-events: none;
   display: grid;
   gap: 0.45rem;
   max-width: min(78vw, 44rem);
@@ -111,7 +112,8 @@ iframe#youtube-player,
 }
 
 .status-autoplay-blocked,
-.status-blocked {
+.status-blocked,
+.status-stalled {
   border-color: rgb(255 209 102 / 32%);
 }
 
