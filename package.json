@@ -13,7 +13,9 @@
     "typecheck": "node ./node_modules/typescript/bin/tsc --noEmit"
   },
   "dependencies": {
+    "@ai-sdk/deepseek": "^2.0.32",
     "@upstash/redis": "^1.37.0",
+    "ai": "^6.0.175",
     "next": "16.2.4",
     "react": "19.2.4",
     "react-dom": "19.2.4"
